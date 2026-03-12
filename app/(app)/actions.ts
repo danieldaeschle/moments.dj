@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sendPushToUser } from "@/lib/push";
 
 export async function createMoment(formData: FormData) {
   const supabase = await createClient();
@@ -33,6 +34,32 @@ export async function createMoment(formData: FormData) {
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Notify the other user
+  const { data: otherUsers } = await supabase
+    .from("profiles")
+    .select("id")
+    .neq("id", user.id);
+
+  if (otherUsers?.length) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single();
+
+    const authorName = profile?.display_name || "Someone";
+
+    await Promise.allSettled(
+      otherUsers.map((u) =>
+        sendPushToUser(u.id, {
+          title: "New moment ✨",
+          body: `${authorName}: ${title.trim()}`,
+          url: "/",
+        }),
+      ),
+    );
   }
 
   revalidatePath("/");

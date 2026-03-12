@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { LogOut } from "lucide-react";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 type Props = {
   profile: Profile | null;
@@ -15,6 +16,7 @@ type Props = {
 
 export function AppShell({ profile, otherProfile, children }: Props) {
   const router = useRouter();
+  usePushNotifications();
 
   async function handleSignOut() {
     const supabase = createClient();
