@@ -1,0 +1,16 @@
+{
+  "name": "moments.dj",
+  "short_name": "moments",
+  "description": "A private shared timeline",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f0eb",
+  "theme_color": "#c97878",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
