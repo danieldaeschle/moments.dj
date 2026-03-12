@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
-import { LogOut, Sparkles } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 type Props = {
   profile: Profile | null;
@@ -25,9 +25,8 @@ export function AppShell({ profile, otherProfile, children }: Props) {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto grid h-14 max-w-lg grid-cols-[48px_1fr_48px] items-center px-4">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h1 className="text-center text-base font-semibold tracking-tight">
+        <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+          <h1 className="text-base font-semibold tracking-tight">
             Moments of D & J
           </h1>
           <Button

@@ -3,9 +3,9 @@
 import type { MomentWithAuthor } from "@/lib/types";
 import { TimelineItem } from "@/components/timeline-item";
 import { FAB } from "@/components/fab";
-import { CreateMomentDrawer } from "@/components/create-moment-drawer";
 import { MomentDetailDrawer } from "@/components/moment-detail-drawer";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Props = {
   moments: MomentWithAuthor[];
@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function Timeline({ moments, currentUserId }: Props) {
-  const [createOpen, setCreateOpen] = useState(false);
+  const router = useRouter();
   const [selectedMoment, setSelectedMoment] = useState<MomentWithAuthor | null>(
     null,
   );
@@ -28,8 +28,7 @@ export function Timeline({ moments, currentUserId }: Props) {
         <p className="text-center text-sm text-muted-foreground">
           Create your first moment together
         </p>
-        <FAB onClick={() => setCreateOpen(true)} />
-        <CreateMomentDrawer open={createOpen} onOpenChange={setCreateOpen} />
+        <FAB onClick={() => router.push("/create")} />
       </div>
     );
   }
@@ -53,8 +52,7 @@ export function Timeline({ moments, currentUserId }: Props) {
         ))}
       </div>
 
-      <FAB onClick={() => setCreateOpen(true)} />
-      <CreateMomentDrawer open={createOpen} onOpenChange={setCreateOpen} />
+      <FAB onClick={() => router.push("/create")} />
       <MomentDetailDrawer
         moment={selectedMoment}
         isOwn={selectedMoment?.author_id === currentUserId}
