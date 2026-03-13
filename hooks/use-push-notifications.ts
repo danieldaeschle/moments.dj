@@ -18,6 +18,9 @@ function urlBase64ToUint8Array(base64String: string) {
 async function subscribeToPush() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
+  // Register the service worker first
+  await navigator.serviceWorker.register("/sw.js");
+
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return;
 

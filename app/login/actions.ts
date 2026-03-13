@@ -7,7 +7,7 @@ import {
   normalizeEmail,
 } from "@/lib/constants";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
+import { getBaseUrl } from "@/lib/utils";
 
 const USER_KEYS: Record<string, (typeof ALLOWED_EMAILS)[number]> = {
   daniel: "daniel.daeschle@gmail.com",
@@ -20,8 +20,7 @@ export async function sendMagicLink(userKey: string) {
     return { error: "Unbekannter Benutzer" };
   }
 
-  const headerStore = await headers();
-  const origin = headerStore.get("origin") || headerStore.get("referer") || "";
+  const origin = getBaseUrl();
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({

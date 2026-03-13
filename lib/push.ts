@@ -1,5 +1,5 @@
 import webPush from "web-push";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 webPush.setVapidDetails(
   "mailto:hello@moments.dj",
@@ -11,7 +11,7 @@ export async function sendPushToUser(
   userId: string,
   payload: { title: string; body: string; url?: string },
 ) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: subscriptions } = await supabase
     .from("push_subscriptions")
