@@ -1,7 +1,7 @@
 "use client";
 
 import type { MomentWithAuthor } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -12,9 +12,10 @@ import {
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import Image from "next/image";
+import Link from "next/link";
 import { getImageUrl } from "@/lib/image-utils";
 import { Pencil } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type Props = {
   moment: MomentWithAuthor | null;
@@ -23,8 +24,6 @@ type Props = {
 };
 
 export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
-  const router = useRouter();
-
   return (
     <Drawer open={!!moment} onOpenChange={onOpenChange}>
       <DrawerContent>
@@ -61,16 +60,17 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
             </div>
             <DrawerFooter>
               {isOwn && (
-                <Button
-                  onClick={() => {
-                    onOpenChange(false);
-                    router.push(`/edit/${moment.id}`);
-                  }}
-                  className="h-12 w-full"
+                <Link
+                  href={`/edit/${moment.id}`}
+                  onClick={() => onOpenChange(false)}
+                  className={cn(
+                    buttonVariants(),
+                    "h-12 w-full",
+                  )}
                 >
                   <Pencil className="mr-2 h-4 w-4" />
                   Bearbeiten
-                </Button>
+                </Link>
               )}
             </DrawerFooter>
           </>

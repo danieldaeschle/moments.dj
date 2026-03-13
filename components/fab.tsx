@@ -1,22 +1,25 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const isDev = process.env.NODE_ENV === "development";
 
 type Props = {
-  onClick: () => void;
+  href: string;
 };
 
-export function FAB({ onClick }: Props) {
+export function FAB({ href }: Props) {
   return (
-    <Button
-      onClick={onClick}
-      size="icon"
-      className={`fixed right-6 z-50 h-14 w-14 rounded-full shadow-lg ${isDev ? "bottom-22" : "bottom-6"}`}
+    <Link
+      href={href}
+      className={cn(
+        buttonVariants({ size: "icon" }),
+        "fixed right-6 z-50 h-14 w-14 rounded-full shadow-lg",
+        isDev ? "bottom-22" : "bottom-6",
+      )}
     >
       <Plus className="h-6 w-6" />
-    </Button>
+    </Link>
   );
 }

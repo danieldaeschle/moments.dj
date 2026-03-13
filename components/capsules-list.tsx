@@ -6,7 +6,6 @@ import { FAB } from "@/components/fab";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { CloudRain, ChevronDown, ChevronRight, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { openBadDayCapsule } from "@/app/(app)/capsules/actions";
 import { toast } from "sonner";
@@ -25,7 +24,6 @@ export function CapsulesList({
   currentUserId,
   recipientName,
 }: Props) {
-  const router = useRouter();
   const [capsules, setCapsules] = useState(initial);
   const [sentExpanded, setSentExpanded] = useState(false);
   const [badDayLoading, setBadDayLoading] = useState(false);
@@ -238,7 +236,7 @@ export function CapsulesList({
         </section>
       )}
 
-      <FAB onClick={() => router.push("/capsules/create")} />
+      <FAB href="/capsules/create" />
     </div>
   );
 }

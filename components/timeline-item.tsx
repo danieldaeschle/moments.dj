@@ -56,6 +56,7 @@ function ItemCard({
               src={getImageUrl(moment.image_path)}
               alt={moment.title}
               fill
+              loading="eager"
               className="object-cover"
               sizes="(max-width: 512px) 80vw, 420px"
             />

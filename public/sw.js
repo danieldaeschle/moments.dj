@@ -14,7 +14,9 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request)),
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then((r) => r || Response.error()),
+    ),
   );
 });
 

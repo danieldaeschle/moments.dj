@@ -4,6 +4,7 @@ import { getPartnerProfile } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { sendPushToUser } from "@/lib/push";
+import { after } from "next/server";
 
 export async function createMoment(formData: FormData) {
   const supabase = await createClient();
@@ -40,34 +41,39 @@ export async function createMoment(formData: FormData) {
 
   revalidatePath("/");
 
-  try {
-    const partnerProfile = getPartnerProfile(user.email);
-    if (partnerProfile) {
-      const { data: otherUser } = await supabase
-        .from("profiles")
-        .select("id")
-        .ilike("email", partnerProfile.email)
-        .maybeSingle();
-
-      if (otherUser) {
-        const { data: profile } = await supabase
+  const userEmail = user.email;
+  const userId = user.id;
+  after(async () => {
+    try {
+      const partnerProfile = getPartnerProfile(userEmail);
+      if (partnerProfile) {
+        const supabaseAfter = await createClient();
+        const { data: otherUser } = await supabaseAfter
           .from("profiles")
-          .select("display_name")
-          .eq("id", user.id)
-          .single();
+          .select("id")
+          .ilike("email", partnerProfile.email)
+          .maybeSingle();
 
-        const authorName = profile?.display_name || "Jemand";
+        if (otherUser) {
+          const { data: profile } = await supabaseAfter
+            .from("profiles")
+            .select("display_name")
+            .eq("id", userId)
+            .single();
 
-        await sendPushToUser(otherUser.id, {
-          title: "Neuer Moment ✨",
-          body: `${authorName}: ${title.trim()}`,
-          url: "/",
-        });
+          const authorName = profile?.display_name || "Jemand";
+
+          await sendPushToUser(otherUser.id, {
+            title: "Neuer Moment ✨",
+            body: `${authorName}: ${title.trim()}`,
+            url: "/",
+          });
+        }
       }
+    } catch {
+      // Push notification failure should not break moment creation
     }
-  } catch {
-    // Push notification failure should not break moment creation
-  }
+  });
 
   return { success: true };
 }

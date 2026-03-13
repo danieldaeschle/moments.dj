@@ -6,7 +6,6 @@ import { FAB } from "@/components/fab";
 import { MomentDetailDrawer } from "@/components/moment-detail-drawer";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 
 type Props = {
   moments: MomentWithAuthor[];
@@ -14,7 +13,6 @@ type Props = {
 };
 
 export function Timeline({ moments, currentUserId }: Props) {
-  const router = useRouter();
   const [selectedMoment, setSelectedMoment] = useState<MomentWithAuthor | null>(
     null,
   );
@@ -64,7 +62,7 @@ export function Timeline({ moments, currentUserId }: Props) {
         <p className="text-center text-sm text-muted-foreground">
           Erstellt euren ersten Moment zusammen
         </p>
-        <FAB onClick={() => router.push("/create")} />
+        <FAB href="/create" />
       </div>
     );
   }
@@ -92,7 +90,7 @@ export function Timeline({ moments, currentUserId }: Props) {
         ))}
       </div>
 
-      <FAB onClick={() => router.push("/create")} />
+      <FAB href="/create" />
       <MomentDetailDrawer
         moment={selectedMoment}
         isOwn={selectedMoment?.author_id === currentUserId}
