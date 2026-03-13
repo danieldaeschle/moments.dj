@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { LogOut, Pill, Sparkle } from "lucide-react";
 import { InstallPrompt } from "@/components/install-prompt";
 import { UpdatePrompt } from "@/components/update-prompt";
+import { useSwUpdate } from "@/hooks/use-sw-update";
 
 const isDev = process.env.NODE_ENV === "development";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -20,6 +21,7 @@ type Props = {
 export function AppShell({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const { updateAvailable, applyUpdate } = useSwUpdate();
   usePushNotifications();
 
   async function handleSignOut() {
@@ -82,8 +84,11 @@ export function AppShell({ children }: Props) {
       )}
 
       <Toaster position="top-center" />
-      <InstallPrompt />
-      <UpdatePrompt />
+      {updateAvailable ? (
+        <UpdatePrompt applyUpdate={applyUpdate} />
+      ) : (
+        <InstallPrompt />
+      )}
     </div>
   );
 }
