@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Timeline } from "@/components/timeline";
 import type { MomentWithAuthor } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function TimelinePage() {
   const supabase = await createClient();
   const {
@@ -16,6 +18,7 @@ export default async function TimelinePage() {
   const { data: moments } = await supabase
     .from("moments")
     .select("*, profiles(*)")
+    .order("moment_date", { ascending: false })
     .order("created_at", { ascending: false });
 
   return (

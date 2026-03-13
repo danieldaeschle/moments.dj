@@ -1,5 +1,6 @@
 "use server";
 
+import { getPartnerProfile } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { sendPushToUser } from "@/lib/push";
@@ -11,17 +12,16 @@ export async function createMoment(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Not authenticated" };
+    return { error: "Nicht angemeldet" };
   }
 
   const title = formData.get("title") as string;
   const text = (formData.get("text") as string) || null;
   const imagePath = (formData.get("image_path") as string) || null;
-  const createdAt =
-    (formData.get("created_at") as string) || new Date().toISOString();
+  const momentDate = (formData.get("moment_date") as string) || new Date().toISOString().slice(0, 10);
 
   if (!title?.trim()) {
-    return { error: "Title is required" };
+    return { error: "Titel ist erforderlich" };
   }
 
   const { error } = await supabase.from("moments").insert({
@@ -29,37 +29,39 @@ export async function createMoment(formData: FormData) {
     title: title.trim(),
     text: text?.trim() || null,
     image_path: imagePath,
-    created_at: createdAt,
+    moment_date: momentDate,
   });
 
   if (error) {
     return { error: error.message };
   }
 
-  // Notify the other user
-  const { data: otherUsers } = await supabase
+  const partnerProfile = getPartnerProfile(user.email);
+  if (!partnerProfile) {
+    revalidatePath("/");
+    return { success: true };
+  }
+
+  const { data: otherUser } = await supabase
     .from("profiles")
     .select("id")
-    .neq("id", user.id);
+    .ilike("email", partnerProfile.email)
+    .maybeSingle();
 
-  if (otherUsers?.length) {
+  if (otherUser) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("display_name")
       .eq("id", user.id)
       .single();
 
-    const authorName = profile?.display_name || "Someone";
+    const authorName = profile?.display_name || "Jemand";
 
-    await Promise.allSettled(
-      otherUsers.map((u) =>
-        sendPushToUser(u.id, {
-          title: "New moment ✨",
-          body: `${authorName}: ${title.trim()}`,
-          url: "/",
-        }),
-      ),
-    );
+    await sendPushToUser(otherUser.id, {
+      title: "Neuer Moment ✨",
+      body: `${authorName}: ${title.trim()}`,
+      url: "/",
+    });
   }
 
   revalidatePath("/");
@@ -72,7 +74,7 @@ export async function updateMoment(id: string, formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Not authenticated" };
+    return { error: "Nicht angemeldet" };
   }
 
   const { data: existing } = await supabase
@@ -82,21 +84,21 @@ export async function updateMoment(id: string, formData: FormData) {
     .single();
 
   if (!existing) {
-    return { error: "Moment not found" };
+    return { error: "Moment nicht gefunden" };
   }
 
   if (existing.author_id !== user.id) {
-    return { error: "Not authorized" };
+    return { error: "Nicht berechtigt" };
   }
 
   const title = formData.get("title") as string;
   const text = (formData.get("text") as string) || null;
   const imagePath = formData.get("image_path") as string | null;
   const removeImage = formData.get("remove_image") === "true";
-  const createdAt = (formData.get("created_at") as string) || undefined;
+  const momentDate = (formData.get("moment_date") as string) || undefined;
 
   if (!title?.trim()) {
-    return { error: "Title is required" };
+    return { error: "Titel ist erforderlich" };
   }
 
   // If image was removed or replaced, delete old image from storage
@@ -118,8 +120,8 @@ export async function updateMoment(id: string, formData: FormData) {
     updates.image_path = imagePath;
   }
 
-  if (createdAt) {
-    updates.created_at = createdAt;
+  if (momentDate) {
+    updates.moment_date = momentDate;
   }
 
   const { error } = await supabase.from("moments").update(updates).eq("id", id);
@@ -138,7 +140,7 @@ export async function deleteMoment(id: string) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Not authenticated" };
+    return { error: "Nicht angemeldet" };
   }
 
   // Fetch the moment to get its image_path for cleanup
@@ -149,11 +151,11 @@ export async function deleteMoment(id: string) {
     .single();
 
   if (!moment) {
-    return { error: "Moment not found" };
+    return { error: "Moment nicht gefunden" };
   }
 
   if (moment.author_id !== user.id) {
-    return { error: "Not authorized" };
+    return { error: "Nicht berechtigt" };
   }
 
   // Delete image from storage if it exists

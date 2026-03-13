@@ -1,28 +1,42 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
-import { compressImage } from "@/lib/image-utils";
-import { createMoment } from "@/app/(app)/actions";
+import Image from "next/image";
+import { ArrowLeft, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/date-picker";
-import { ArrowLeft, ImagePlus, X } from "lucide-react";
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { createCapsule } from "@/app/(app)/capsules/actions";
+import { TRIGGER_LABELS } from "@/lib/constants";
+import { compressImage } from "@/lib/image-utils";
+import { createClient } from "@/lib/supabase/client";
+import type { TriggerType } from "@/lib/types";
 
-export default function CreateMomentPage() {
+type Props = {
+  recipientName: string;
+};
+
+export function CreateCapsuleForm({ recipientName }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [date, setDate] = useState<string>(() =>
+  const [message, setMessage] = useState("");
+  const [triggerType, setTriggerType] = useState<TriggerType>("manual");
+  const [openAt, setOpenAt] = useState<string>(() =>
     new Date().toISOString().slice(0, 10),
   );
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,7 +50,7 @@ export default function CreateMomentPage() {
   }
 
   async function handleSubmit() {
-    if (!title.trim()) return;
+    if (!title.trim() || !message.trim()) return;
     setLoading(true);
 
     try {
@@ -63,16 +77,17 @@ export default function CreateMomentPage() {
 
       const formData = new FormData();
       formData.set("title", title.trim());
-      if (text.trim()) formData.set("text", text.trim());
+      formData.set("message", message.trim());
+      formData.set("trigger_type", triggerType);
       if (imagePath) formData.set("image_path", imagePath);
-      formData.set("moment_date", date);
+      if (triggerType === "date") formData.set("open_at", openAt);
 
-      const result = await createMoment(formData);
+      const result = await createCapsule(formData);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Moment erstellt");
-        router.push("/");
+        toast.success("Kapsel erstellt");
+        router.push("/capsules");
       }
     } catch {
       toast.error("Etwas ist schiefgelaufen");
@@ -92,37 +107,59 @@ export default function CreateMomentPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Neuer Moment</h1>
+        <h1 className="text-lg font-semibold">Neue Kapsel für {recipientName}</h1>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="moment-title">Titel</Label>
+          <Label htmlFor="capsule-title">Titel</Label>
           <Input
-            id="moment-title"
-            placeholder="Was ist passiert?"
+            id="capsule-title"
+            placeholder="Gib der Kapsel einen Namen..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="h-12 text-base"
           />
         </div>
+
         <div className="space-y-2">
-          <Label>Datum</Label>
-          <DatePicker value={date} onChange={setDate} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="moment-text">Notizen (optional)</Label>
+          <Label htmlFor="capsule-message">Nachricht</Label>
           <Textarea
-            id="moment-text"
-            placeholder="Füge ein paar Details hinzu..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={3}
+            id="capsule-message"
+            placeholder="Schreibe deine Nachricht..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={4}
             className="resize-none text-base"
           />
         </div>
+
         <div className="space-y-2">
-          <Label>Foto (optional)</Label>
+          <Label>Auslöser</Label>
+          <Select
+            value={triggerType}
+            onValueChange={(value) => setTriggerType(value as TriggerType)}
+          >
+            <SelectTrigger className="h-12 w-full text-base">
+              <SelectValue>{TRIGGER_LABELS[triggerType]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="manual">{TRIGGER_LABELS.manual}</SelectItem>
+              <SelectItem value="date">{TRIGGER_LABELS.date}</SelectItem>
+              <SelectItem value="bad_day">{TRIGGER_LABELS.bad_day}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {triggerType === "date" && (
+          <div className="space-y-2">
+            <Label>Öffnet am</Label>
+            <DatePicker value={openAt} onChange={setOpenAt} />
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label>Bild (optional)</Label>
           {imagePreview ? (
             <div className="relative">
               <Image
@@ -158,7 +195,6 @@ export default function CreateMomentPage() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            aria-label={loading ? "Erstelle..." : "Moment erstellen"}
             onChange={handleImageSelect}
             className="hidden"
           />
@@ -168,10 +204,10 @@ export default function CreateMomentPage() {
       <div className="mt-8">
         <Button
           onClick={handleSubmit}
-          disabled={loading || !title.trim()}
+          disabled={loading || !title.trim() || !message.trim()}
           className="h-12 w-full text-base"
         >
-          {loading ? "Erstelle..." : "Moment erstellen"}
+          {loading ? "Erstelle..." : "Kapsel erstellen"}
         </Button>
       </div>
     </div>

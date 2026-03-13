@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { USER_PROFILES } from "@/lib/constants";
+import { getUserProfile, normalizeEmail } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -18,12 +18,13 @@ export async function GET(request: Request) {
 
       if (user?.email) {
         // Upsert profile based on email → constants mapping
-        const profile = USER_PROFILES[user.email];
+        const normalizedEmail = normalizeEmail(user.email);
+        const profile = getUserProfile(user.email);
         if (profile) {
           await supabase.from("profiles").upsert(
             {
               id: user.id,
-              email: user.email,
+              email: normalizedEmail,
               display_name: profile.displayName,
               emoji: profile.emoji,
             },

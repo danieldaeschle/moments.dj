@@ -3,32 +3,30 @@
 import type { MomentWithAuthor } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
+import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/image-utils";
 
 type Props = {
   moment: MomentWithAuthor;
-  isOwn: boolean;
   onSelect: () => void;
 };
 
-export function TimelineItem({ moment, isOwn, onSelect }: Props) {
+export function TimelineItem({ moment, onSelect }: Props) {
   return (
-    <div className="relative flex">
-      {/* Left side */}
-      <div className="w-[calc(50%-20px)] pr-3">
-        {!isOwn && <ItemCard moment={moment} onSelect={onSelect} />}
-      </div>
-
-      {/* Center emoji marker */}
-      <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background text-base shadow-sm">
+    <div className="relative flex items-start">
+      {/* Left emoji marker */}
+      <div
+        data-emoji-marker
+        className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background text-base shadow-sm"
+      >
         {moment.profiles.emoji}
       </div>
 
-      {/* Right side */}
-      <div className="w-[calc(50%-20px)] pl-3">
-        {isOwn && <ItemCard moment={moment} onSelect={onSelect} />}
+      {/* Right side – full width */}
+      <div className="min-w-0 flex-1 pl-3">
+        <ItemCard moment={moment} onSelect={onSelect} />
       </div>
     </div>
   );
@@ -59,20 +57,22 @@ function ItemCard({
               alt={moment.title}
               fill
               className="object-cover"
-              sizes="(max-width: 512px) 45vw, 220px"
+              sizes="(max-width: 512px) 80vw, 420px"
             />
           </div>
         )}
-        <CardContent className={moment.image_path ? "pt-2 pb-2" : "pt-3 pb-2"}>
+        <CardContent className="py-3">
+          <p className="mb-2 text-xs text-muted-foreground/70">
+            {format(new Date(moment.moment_date + "T00:00:00"), "d. MMM yyyy", {
+              locale: de,
+            })}
+          </p>
           <h3 className="text-sm font-medium leading-snug">{moment.title}</h3>
           {moment.text && (
             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
               {moment.text}
             </p>
           )}
-          <p className="mt-1.5 text-[10px] text-muted-foreground/70">
-            {format(new Date(moment.created_at), "d MMM yyyy")}
-          </p>
         </CardContent>
       </Card>
     </motion.div>

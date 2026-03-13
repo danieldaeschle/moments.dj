@@ -10,6 +10,7 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { format } from "date-fns";
+import { de } from "date-fns/locale";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/image-utils";
 import { Pencil } from "lucide-react";
@@ -53,7 +54,9 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                {format(new Date(moment.created_at), "PPpp")}
+                {format(new Date(moment.moment_date + "T00:00:00"), "PPP", {
+                  locale: de,
+                })}
               </p>
             </div>
             <DrawerFooter>
@@ -66,7 +69,7 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
                   className="h-12 w-full"
                 >
                   <Pencil className="mr-2 h-4 w-4" />
-                  Edit
+                  Bearbeiten
                 </Button>
               )}
             </DrawerFooter>

@@ -1,21 +1,23 @@
 "use client";
 
-import type { Profile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
-import { LogOut } from "lucide-react";
+import { LogOut, Pill, Sparkle } from "lucide-react";
+
+const isDev = process.env.NODE_ENV === "development";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 type Props = {
-  profile: Profile | null;
-  otherProfile: Profile | null;
   children: React.ReactNode;
 };
 
-export function AppShell({ profile, otherProfile, children }: Props) {
+export function AppShell({ children }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   usePushNotifications();
 
   async function handleSignOut() {
@@ -27,9 +29,9 @@ export function AppShell({ profile, otherProfile, children }: Props) {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+        <div className="mx-auto flex h-14 items-center justify-between px-4">
           <h1 className="text-base font-semibold tracking-tight">
-            Moments of D & J
+            Unsere Momente 🤓🌚
           </h1>
           <Button
             variant="ghost"
@@ -42,7 +44,40 @@ export function AppShell({ profile, otherProfile, children }: Props) {
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col">{children}</main>
+      <main className={`flex flex-1 flex-col ${isDev ? "pb-16" : ""}`}>
+        {children}
+      </main>
+
+      {isDev && (
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/80 backdrop-blur-sm">
+          <div className="mx-auto flex h-16 max-w-lg items-stretch">
+            <Link
+              href="/"
+              className={cn(
+                "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors",
+                pathname === "/"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Sparkle className="h-5 w-5" />
+              Momente
+            </Link>
+            <Link
+              href="/capsules"
+              className={cn(
+                "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors",
+                pathname === "/capsules"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Pill className="h-5 w-5" />
+              Kapseln
+            </Link>
+          </div>
+        </nav>
+      )}
 
       <Toaster position="top-center" />
     </div>

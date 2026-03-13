@@ -4,7 +4,8 @@ import type { MomentWithAuthor } from "@/lib/types";
 import { TimelineItem } from "@/components/timeline-item";
 import { FAB } from "@/components/fab";
 import { MomentDetailDrawer } from "@/components/moment-detail-drawer";
-import { useState } from "react";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
@@ -17,16 +18,51 @@ export function Timeline({ moments, currentUserId }: Props) {
   const [selectedMoment, setSelectedMoment] = useState<MomentWithAuthor | null>(
     null,
   );
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [lineStyle, setLineStyle] = useState<{
+    top: number;
+    height: number;
+  } | null>(null);
+
+  const measureLine = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const emojis = container.querySelectorAll<HTMLElement>(
+      "[data-emoji-marker]",
+    );
+    if (emojis.length < 2) {
+      setLineStyle(null);
+      return;
+    }
+    const containerRect = container.getBoundingClientRect();
+    const firstRect = emojis[0].getBoundingClientRect();
+    const lastRect = emojis[emojis.length - 1].getBoundingClientRect();
+    const top = firstRect.top + firstRect.height / 2 - containerRect.top;
+    const bottom = lastRect.top + lastRect.height / 2 - containerRect.top;
+    setLineStyle({ top, height: bottom - top });
+  }, []);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(measureLine);
+    window.addEventListener("resize", measureLine);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", measureLine);
+    };
+  }, [moments, measureLine]);
+
+  // Realtime subscription + visibility fallback
+  useRealtimeRefresh("moments");
 
   if (moments.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-24">
         <div className="mb-4 text-5xl">🌚 🤓</div>
         <h2 className="mb-2 text-lg font-semibold text-foreground">
-          No moments yet
+          Noch keine Momente
         </h2>
         <p className="text-center text-sm text-muted-foreground">
-          Create your first moment together
+          Erstellt euren ersten Moment zusammen
         </p>
         <FAB onClick={() => router.push("/create")} />
       </div>
@@ -34,19 +70,23 @@ export function Timeline({ moments, currentUserId }: Props) {
   }
 
   return (
-    <div className="relative w-full mx-auto max-w-lg px-4 pb-32 pt-6">
-      {/* Center spine */}
-      <div className="absolute top-0 bottom-8 left-1/2 w-px -translate-x-1/2 bg-border" />
-
-      {/* Dot at the beginning of the timeline */}
-      <div className="absolute left-1/2 bottom-8 h-3 w-3 -translate-x-1/2 rounded-full bg-primary" />
+    <div
+      ref={containerRef}
+      className="relative w-full mx-auto mb-4 max-w-lg px-4 pt-4"
+    >
+      {/* Left spine */}
+      {lineStyle && (
+        <div
+          className="absolute left-9 w-px -translate-x-1/2 bg-border"
+          style={{ top: lineStyle.top, height: lineStyle.height }}
+        />
+      )}
 
       <div className="space-y-5">
         {moments.map((moment) => (
           <TimelineItem
             key={moment.id}
             moment={moment}
-            isOwn={moment.author_id === currentUserId}
             onSelect={() => setSelectedMoment(moment)}
           />
         ))}

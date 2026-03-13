@@ -16,23 +16,5 @@ export default async function AuthenticatedLayout({
     redirect("/login");
   }
 
-  // Fetch the current user's profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  // Fetch the other user's profile
-  const { data: otherProfile } = await supabase
-    .from("profiles")
-    .select("*")
-    .neq("id", user.id)
-    .single();
-
-  return (
-    <AppShell profile={profile} otherProfile={otherProfile}>
-      {children}
-    </AppShell>
-  );
+  return <AppShell>{children}</AppShell>;
 }

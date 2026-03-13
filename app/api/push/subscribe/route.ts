@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
   }
 
   const { subscription } = await request.json();
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     !subscription?.keys?.auth
   ) {
     return NextResponse.json(
-      { error: "Invalid subscription" },
+      { error: "Ungültige Subscription" },
       { status: 400 },
     );
   }

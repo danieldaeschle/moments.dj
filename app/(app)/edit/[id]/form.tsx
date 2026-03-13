@@ -23,9 +23,7 @@ export function EditMomentForm({ moment }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(moment.title);
   const [text, setText] = useState(moment.text || "");
-  const [date, setDate] = useState<string>(
-    new Date(moment.created_at).toISOString().slice(0, 10),
-  );
+  const [date, setDate] = useState<string>(moment.moment_date);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -57,7 +55,7 @@ export function EditMomentForm({ moment }: Props) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) throw new Error("Not authenticated");
+        if (!user) throw new Error("Nicht angemeldet");
 
         const compressed = await compressImage(imageFile);
         const ext = imageFile.name.split(".").pop() || "jpg";
@@ -76,18 +74,17 @@ export function EditMomentForm({ moment }: Props) {
       if (text.trim()) formData.set("text", text.trim());
       if (imagePath) formData.set("image_path", imagePath);
       if (removeImage) formData.set("remove_image", "true");
-      const d = new Date(date + "T12:00:00");
-      formData.set("created_at", d.toISOString());
+      formData.set("moment_date", date);
 
       const result = await updateMoment(moment.id, formData);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Moment updated");
+        toast.success("Moment aktualisiert");
         router.push("/");
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error("Etwas ist schiefgelaufen");
     } finally {
       setSaving(false);
     }
@@ -99,7 +96,7 @@ export function EditMomentForm({ moment }: Props) {
     if (result.error) {
       toast.error(result.error);
     } else {
-      toast.success("Moment deleted");
+      toast.success("Moment gelöscht");
       router.push("/");
     }
     setDeleting(false);
@@ -116,29 +113,29 @@ export function EditMomentForm({ moment }: Props) {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Edit moment</h1>
+        <h1 className="text-lg font-semibold">Moment bearbeiten</h1>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="moment-title">Title</Label>
+          <Label htmlFor="moment-title">Titel</Label>
           <Input
             id="moment-title"
-            placeholder="What happened?"
+            placeholder="Was ist passiert?"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
-          <Label>Date</Label>
+          <Label>Datum</Label>
           <DatePicker value={date} onChange={setDate} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="moment-text">Notes (optional)</Label>
+          <Label htmlFor="moment-text">Notizen (optional)</Label>
           <Textarea
             id="moment-text"
-            placeholder="Add some details..."
+            placeholder="Füge ein paar Details hinzu..."
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
@@ -146,13 +143,13 @@ export function EditMomentForm({ moment }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Photo (optional)</Label>
+          <Label>Foto (optional)</Label>
           {showImage ? (
             <div className="relative">
               {imagePreview ? (
-                <img
+                <Image
                   src={imagePreview}
-                  alt="Preview"
+                  alt="Vorschau"
                   className="max-h-48 w-full rounded-lg object-cover"
                 />
               ) : (
@@ -207,14 +204,14 @@ export function EditMomentForm({ moment }: Props) {
           className="h-12"
         >
           <Trash2 className="mr-2 h-4 w-4" />
-          {deleting ? "Deleting..." : "Delete"}
+          {deleting ? "Lösche..." : "Löschen"}
         </Button>
         <Button
           onClick={handleSave}
           disabled={saving || !title.trim()}
           className="h-12 flex-1 text-base"
         >
-          {saving ? "Saving..." : "Save changes"}
+          {saving ? "Speichere..." : "Änderungen speichern"}
         </Button>
       </div>
     </div>

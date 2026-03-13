@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "moments.dj",
-  description: "A private shared timeline",
+  description: "Eine private gemeinsame Timeline",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="de" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 
-const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -16,7 +16,7 @@ function startDayOfMonth(year: number, month: number) {
 }
 
 function formatMonth(year: number, month: number) {
-  return new Date(year, month).toLocaleString("default", {
+  return new Date(year, month).toLocaleString("de-DE", {
     month: "long",
     year: "numeric",
   });
@@ -24,7 +24,7 @@ function formatMonth(year: number, month: number) {
 
 function formatDisplay(value: string) {
   const [y, m, d] = value.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("default", {
+  return new Date(y, m - 1, d).toLocaleDateString("de-DE", {
     day: "numeric",
     month: "long",
     year: "numeric",
