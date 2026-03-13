@@ -18,7 +18,9 @@ export async function createMoment(formData: FormData) {
   const title = formData.get("title") as string;
   const text = (formData.get("text") as string) || null;
   const imagePath = (formData.get("image_path") as string) || null;
-  const momentDate = (formData.get("moment_date") as string) || new Date().toISOString().slice(0, 10);
+  const momentDate =
+    (formData.get("moment_date") as string) ||
+    new Date().toISOString().slice(0, 10);
 
   if (!title?.trim()) {
     return { error: "Titel ist erforderlich" };
@@ -36,35 +38,37 @@ export async function createMoment(formData: FormData) {
     return { error: error.message };
   }
 
-  const partnerProfile = getPartnerProfile(user.email);
-  if (!partnerProfile) {
-    revalidatePath("/");
-    return { success: true };
-  }
-
-  const { data: otherUser } = await supabase
-    .from("profiles")
-    .select("id")
-    .ilike("email", partnerProfile.email)
-    .maybeSingle();
-
-  if (otherUser) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user.id)
-      .single();
-
-    const authorName = profile?.display_name || "Jemand";
-
-    await sendPushToUser(otherUser.id, {
-      title: "Neuer Moment ✨",
-      body: `${authorName}: ${title.trim()}`,
-      url: "/",
-    });
-  }
-
   revalidatePath("/");
+
+  try {
+    const partnerProfile = getPartnerProfile(user.email);
+    if (partnerProfile) {
+      const { data: otherUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("email", partnerProfile.email)
+        .maybeSingle();
+
+      if (otherUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single();
+
+        const authorName = profile?.display_name || "Jemand";
+
+        await sendPushToUser(otherUser.id, {
+          title: "Neuer Moment ✨",
+          body: `${authorName}: ${title.trim()}`,
+          url: "/",
+        });
+      }
+    }
+  } catch {
+    // Push notification failure should not break moment creation
+  }
+
   return { success: true };
 }
 export async function updateMoment(id: string, formData: FormData) {

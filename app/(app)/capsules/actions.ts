@@ -66,22 +66,26 @@ export async function createCapsule(formData: FormData) {
     return { error: error.message };
   }
 
-  // Notify recipient
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .single();
-
-  const authorName = profile?.display_name || "Jemand";
-
-  await sendPushToUser(recipient.id, {
-    title: "Neue Kapsel 💊",
-    body: `${authorName} hat dir eine Kapsel geschickt`,
-    url: "/capsules",
-  });
-
   revalidatePath("/capsules");
+
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single();
+
+    const authorName = profile?.display_name || "Jemand";
+
+    await sendPushToUser(recipient.id, {
+      title: "Neue Kapsel 💊",
+      body: `${authorName} hat dir eine Kapsel geschickt`,
+      url: "/capsules",
+    });
+  } catch {
+    // Push notification failure should not break capsule creation
+  }
+
   return { success: true };
 }
 

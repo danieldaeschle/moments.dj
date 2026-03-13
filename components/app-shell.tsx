@@ -33,7 +33,7 @@ export function AppShell({ children }: Props) {
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 items-center justify-between px-4">
           <h1 className="text-base font-semibold tracking-tight">
-            Unsere Momente 🤓🌚
+            Unsere Momente
           </h1>
           <Button
             variant="ghost"
