@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "moments.dj",
+  title: "Moments of Daniel & Jo",
   description: "Eine private gemeinsame Timeline",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "moments",
+    title: "Moments of Daniel & Jo",
   },
 };
 

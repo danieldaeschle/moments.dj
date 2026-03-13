@@ -1,11 +1,11 @@
 {
-  "name": "moments.dj",
-  "short_name": "moments",
+  "name": "Moments of Daniel & Jo",
+  "short_name": "Moments",
   "description": "A private shared timeline",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7f0eb",
-  "theme_color": "#c97878",
+  "background_color": "#1e2740",
+  "theme_color": "#1e2740",
   "icons": [
     {
       "src": "/icon-192.png",

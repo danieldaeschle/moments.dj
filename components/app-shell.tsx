@@ -28,7 +28,7 @@ export function AppShell({ children }: Props) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 items-center justify-between px-4">
           <h1 className="text-base font-semibold tracking-tight">
             Unsere Momente 🤓🌚
