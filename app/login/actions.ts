@@ -14,10 +14,17 @@ const USER_KEYS: Record<string, (typeof ALLOWED_EMAILS)[number]> = {
   johanna: "jhnn.m@hotmail.de",
 };
 
-export async function sendMagicLink(userKey: string) {
+export async function sendMagicLink(
+  userKey: string,
+  captchaToken: string | null,
+) {
   const email = USER_KEYS[userKey];
   if (!email) {
     return { error: "Unbekannter Benutzer" };
+  }
+
+  if (!captchaToken) {
+    return { error: "Bitte bestätige das Captcha." };
   }
 
   const origin = getBaseUrl();
@@ -26,6 +33,7 @@ export async function sendMagicLink(userKey: string) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
+      captchaToken,
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });

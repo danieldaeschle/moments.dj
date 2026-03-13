@@ -5,6 +5,16 @@ export const metadata: Metadata = {
   title: "Moments of Daniel & Jo",
   description: "Eine private gemeinsame Timeline",
   manifest: "/manifest.json",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
