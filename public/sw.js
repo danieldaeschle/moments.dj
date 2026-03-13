@@ -1,5 +1,11 @@
 self.addEventListener("install", () => {
-  self.skipWaiting();
+  // Don't skipWaiting automatically so the app can prompt the user first
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {

@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { LogOut, Pill, Sparkle } from "lucide-react";
+import { InstallPrompt } from "@/components/install-prompt";
+import { UpdatePrompt } from "@/components/update-prompt";
 
 const isDev = process.env.NODE_ENV === "development";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -80,6 +82,8 @@ export function AppShell({ children }: Props) {
       )}
 
       <Toaster position="top-center" />
+      <InstallPrompt />
+      <UpdatePrompt />
     </div>
   );
 }
