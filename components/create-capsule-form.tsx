@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
@@ -85,13 +85,13 @@ export function CreateCapsuleForm({ recipientName }: Props) {
       const result = await createCapsule(formData);
       if (result.error) {
         toast.error(result.error);
+        setLoading(false);
       } else {
         toast.success("Kapsel erstellt");
         router.push("/capsules");
       }
     } catch {
       toast.error("Etwas ist schiefgelaufen");
-    } finally {
       setLoading(false);
     }
   }
@@ -107,7 +107,9 @@ export function CreateCapsuleForm({ recipientName }: Props) {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Neue Kapsel für {recipientName}</h1>
+        <h1 className="text-lg font-semibold">
+          Neue Kapsel für {recipientName}
+        </h1>
       </div>
 
       <div className="space-y-4">
@@ -207,7 +209,14 @@ export function CreateCapsuleForm({ recipientName }: Props) {
           disabled={loading || !title.trim() || !message.trim()}
           className="h-12 w-full text-base"
         >
-          {loading ? "Erstelle..." : "Kapsel erstellen"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Erstelle...
+            </>
+          ) : (
+            "Kapsel erstellen"
+          )}
         </Button>
       </div>
     </div>

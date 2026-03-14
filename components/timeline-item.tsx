@@ -51,13 +51,14 @@ function ItemCard({
         onClick={onSelect}
       >
         {moment.image_path && (
-          <div className="relative aspect-4/3 overflow-hidden rounded-t-lg">
+          <div className="overflow-hidden rounded-t-lg">
             <Image
               src={getImageUrl(moment.image_path)}
               alt={moment.title}
-              fill
+              width={800}
+              height={600}
               loading="eager"
-              className="object-cover"
+              className="h-auto w-full"
               sizes="(max-width: 512px) 80vw, 420px"
             />
           </div>

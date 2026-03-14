@@ -14,7 +14,7 @@ import { de } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl } from "@/lib/image-utils";
-import { Pencil } from "lucide-react";
+import { Pencil, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -26,7 +26,7 @@ type Props = {
 export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
   return (
     <Drawer open={!!moment} onOpenChange={onOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="mx-auto w-full max-w-lg">
         {moment && (
           <>
             <DrawerHeader>
@@ -37,14 +37,27 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
             </DrawerHeader>
             <div className="max-h-[60vh] space-y-4 overflow-y-auto px-4">
               {moment.image_path && (
-                <div className="relative aspect-4/3 overflow-hidden rounded-lg">
+                <div className="relative overflow-hidden rounded-lg">
                   <Image
                     src={getImageUrl(moment.image_path)}
                     alt={moment.title}
-                    fill
-                    className="object-cover"
+                    width={1600}
+                    height={1200}
+                    className="h-auto w-full"
                     sizes="(max-width: 512px) 92vw, 480px"
                   />
+                  <a
+                    href={getImageUrl(moment.image_path)}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      buttonVariants({ variant: "secondary", size: "icon" }),
+                      "absolute right-2 bottom-2 h-9 w-9 rounded-full shadow-md",
+                    )}
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
                 </div>
               )}
               {moment.text && (
@@ -63,10 +76,7 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
                 <Link
                   href={`/edit/${moment.id}`}
                   onClick={() => onOpenChange(false)}
-                  className={cn(
-                    buttonVariants(),
-                    "h-12 w-full",
-                  )}
+                  className={cn(buttonVariants(), "h-12 w-full")}
                 >
                   <Pencil className="mr-2 h-4 w-4" />
                   Bearbeiten

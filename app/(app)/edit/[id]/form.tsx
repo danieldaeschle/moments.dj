@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage, getImageUrl } from "@/lib/image-utils";
 import { updateMoment, deleteMoment } from "@/app/(app)/actions";
 import { toast } from "sonner";
-import { ArrowLeft, ImagePlus, X, Trash2 } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, X, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type { MomentWithAuthor } from "@/lib/types";
 
@@ -79,13 +79,13 @@ export function EditMomentForm({ moment }: Props) {
       const result = await updateMoment(moment.id, formData);
       if (result.error) {
         toast.error(result.error);
+        setSaving(false);
       } else {
         toast.success("Moment aktualisiert");
         router.push("/");
       }
     } catch {
       toast.error("Etwas ist schiefgelaufen");
-    } finally {
       setSaving(false);
     }
   }
@@ -95,11 +95,11 @@ export function EditMomentForm({ moment }: Props) {
     const result = await deleteMoment(moment.id);
     if (result.error) {
       toast.error(result.error);
+      setDeleting(false);
     } else {
       toast.success("Moment gelöscht");
       router.push("/");
     }
-    setDeleting(false);
   }
 
   return (
@@ -203,7 +203,11 @@ export function EditMomentForm({ moment }: Props) {
           disabled={deleting || saving}
           className="h-12 flex-1"
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          {deleting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="mr-2 h-4 w-4" />
+          )}
           {deleting ? "Lösche..." : "Löschen"}
         </Button>
         <Button
@@ -211,7 +215,14 @@ export function EditMomentForm({ moment }: Props) {
           disabled={saving || !title.trim()}
           className="h-12 flex-1 text-base"
         >
-          {saving ? "Speichere..." : "Änderungen speichern"}
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Speichere...
+            </>
+          ) : (
+            "Änderungen speichern"
+          )}
         </Button>
       </div>
     </div>

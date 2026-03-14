@@ -11,7 +11,7 @@ import { compressImage } from "@/lib/image-utils";
 import { createMoment } from "@/app/(app)/actions";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/date-picker";
-import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import Image from "next/image";
 
 export default function CreateMomentPage() {
@@ -70,13 +70,13 @@ export default function CreateMomentPage() {
       const result = await createMoment(formData);
       if (result.error) {
         toast.error(result.error);
+        setLoading(false);
       } else {
         toast.success("Moment erstellt");
         router.push("/");
       }
     } catch {
       toast.error("Etwas ist schiefgelaufen");
-    } finally {
       setLoading(false);
     }
   }
@@ -171,7 +171,14 @@ export default function CreateMomentPage() {
           disabled={loading || !title.trim()}
           className="h-12 w-full text-base"
         >
-          {loading ? "Erstelle..." : "Moment erstellen"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Erstelle...
+            </>
+          ) : (
+            "Moment erstellen"
+          )}
         </Button>
       </div>
     </div>
