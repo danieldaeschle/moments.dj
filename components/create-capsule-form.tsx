@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { ImageCropper } from "@/components/image-cropper";
 import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,15 +39,29 @@ export function CreateCapsuleForm({ recipientName }: Props) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
     const url = URL.createObjectURL(file);
+    setCropSrc(url);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleCropComplete(croppedFile: File) {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setImageFile(croppedFile);
+    const url = URL.createObjectURL(croppedFile);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImagePreview(url);
+  }
+
+  function handleCropClose() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
   }
 
   async function handleSubmit() {
@@ -202,6 +217,15 @@ export function CreateCapsuleForm({ recipientName }: Props) {
           />
         </div>
       </div>
+
+      {cropSrc && (
+        <ImageCropper
+          imageSrc={cropSrc}
+          open={!!cropSrc}
+          onClose={handleCropClose}
+          onCropComplete={handleCropComplete}
+        />
+      )}
 
       <div className="mt-8">
         <Button

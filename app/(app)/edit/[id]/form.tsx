@@ -13,6 +13,7 @@ import { updateMoment, deleteMoment } from "@/app/(app)/actions";
 import { toast } from "sonner";
 import { ArrowLeft, ImagePlus, Loader2, X, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { ImageCropper } from "@/components/image-cropper";
 import type { MomentWithAuthor } from "@/lib/types";
 
 type Props = {
@@ -29,6 +30,7 @@ export function EditMomentForm({ moment }: Props) {
   const [removeImage, setRemoveImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showImage = imagePreview || (!removeImage && moment.image_path);
@@ -36,11 +38,24 @@ export function EditMomentForm({ moment }: Props) {
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
-    setRemoveImage(false);
     const url = URL.createObjectURL(file);
+    setCropSrc(url);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleCropComplete(croppedFile: File) {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setImageFile(croppedFile);
+    setRemoveImage(false);
+    const url = URL.createObjectURL(croppedFile);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImagePreview(url);
+  }
+
+  function handleCropClose() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
   }
 
   async function handleSave() {
@@ -195,6 +210,15 @@ export function EditMomentForm({ moment }: Props) {
           />
         </div>
       </div>
+
+      {cropSrc && (
+        <ImageCropper
+          imageSrc={cropSrc}
+          open={!!cropSrc}
+          onClose={handleCropClose}
+          onCropComplete={handleCropComplete}
+        />
+      )}
 
       <div className="mt-8 flex gap-2">
         <Button

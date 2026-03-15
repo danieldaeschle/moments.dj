@@ -1,17 +1,23 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { CapsuleCard, SentCapsuleCard } from "@/components/capsule-card";
-import { FAB } from "@/components/fab";
+import {
+  CapsuleCard,
+  CapsuleOpenOverlay,
+  OpenedCapsuleCard,
+  SentCapsuleCard,
+} from "@/components/capsule-card";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
-import { CloudRain, ChevronDown, ChevronRight, Send } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { CloudRain, ChevronDown, ChevronRight, Plus, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { openBadDayCapsule } from "@/app/(app)/capsules/actions";
-import { toast } from "sonner";
 import type { CapsuleWithProfiles } from "@/lib/types";
 
 const MAX_SECTION_PREVIEW = 5;
+const FLOATING_OFFSET =
+  process.env.NODE_ENV === "development" ? "bottom-22" : "bottom-6";
 
 type Props = {
   capsules: CapsuleWithProfiles[];
@@ -26,12 +32,15 @@ export function CapsulesList({
 }: Props) {
   const [capsules, setCapsules] = useState(initial);
   const [sentExpanded, setSentExpanded] = useState(false);
-  const [badDayLoading, setBadDayLoading] = useState(false);
-  const [justOpenedId, setJustOpenedId] = useState<string | null>(null);
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [badDayOverlayCapsule, setBadDayOverlayCapsule] =
+    useState<CapsuleWithProfiles | null>(null);
 
   useEffect(() => {
-    setCapsules(initial);
-  }, [initial]);
+    if (!overlayOpen) {
+      setCapsules(initial);
+    }
+  }, [initial, overlayOpen]);
 
   useRealtimeRefresh("memory_capsules");
 
@@ -40,6 +49,7 @@ export function CapsulesList({
   const receivedBadDay = received.filter(
     (c) => c.trigger_type === "bad_day" && !c.opened_at,
   );
+  const nextBadDayCapsule = receivedBadDay[0] ?? null;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const now = useMemo(() => Date.now(), [capsules]);
   const receivedLocked = received
@@ -80,163 +90,191 @@ export function CapsulesList({
     receivedOpened.length > 0 ||
     receivedBadDay.length > 0;
 
-  async function handleBadDay() {
-    setBadDayLoading(true);
-    const result = await openBadDayCapsule();
-    if (result.error) {
-      toast.error(result.error);
+  function handleSentDeleted(id: string) {
+    setCapsules((prev) => prev.filter((capsule) => capsule.id !== id));
+  }
+
+  function handleCapsuleOpened(id: string, openedAt: string) {
+    setCapsules((prev) =>
+      prev.map((capsule) =>
+        capsule.id === id ? { ...capsule, opened_at: openedAt } : capsule,
+      ),
+    );
+  }
+
+  function handleBadDayOverlayOpen() {
+    if (!nextBadDayCapsule) {
+      return;
     }
-    setBadDayLoading(false);
+
+    setBadDayOverlayCapsule(nextBadDayCapsule);
+    setOverlayOpen(true);
+  }
+
+  function handleBadDayOverlayClose() {
+    setBadDayOverlayCapsule(null);
+    setOverlayOpen(false);
   }
 
   return (
-    <div
-      className={`mx-auto w-full max-w-lg px-4 pb-32 pt-4 ${capsules.length === 0 ? "flex flex-1 flex-col" : ""}`}
-    >
-      {/* Bad Day Button – always visible */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+    <>
+      <div
+        className={`mx-auto w-full max-w-lg px-4 pb-32 pt-4 ${capsules.length === 0 ? "flex flex-1 flex-col" : ""}`}
       >
-        <button
-          type="button"
-          onClick={handleBadDay}
-          disabled={badDayLoading || receivedBadDay.length === 0}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-rose-500/15 px-6 py-4 text-rose-700 shadow-sm transition-all active:scale-[0.98] hover:bg-rose-500/25 disabled:opacity-50 dark:text-rose-300"
-        >
-          <CloudRain className="h-5 w-5 shrink-0" />
-          <span className="text-sm font-semibold">
-            {badDayLoading
-              ? "Kapsel wird geöffnet…"
-              : receivedBadDay.length === 0
-                ? "Keine Kapseln für schlechte Tage"
-                : "Ich habe einen schlechten Tag"}
-          </span>
-        </button>
-      </motion.div>
-
-      {/* Locked Capsules – only from partner */}
-      {receivedLocked.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Verschlossene Kapseln ({receivedLocked.length})
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <AnimatePresence mode="popLayout">
-              {receivedLocked.slice(0, MAX_SECTION_PREVIEW).map((capsule) => (
-                <CapsuleCard
-                  key={capsule.id}
-                  capsule={capsule}
-                  isRecipient
-                  onOpened={(id) => setJustOpenedId(id)}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-          {receivedLocked.length > MAX_SECTION_PREVIEW && (
-            <Link
-              href="/capsules/locked"
-              className="mt-4 flex items-center justify-center gap-1 rounded-xl border border-dashed px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
-            >
-              Alle verschlossenen Kapseln
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          )}
-        </section>
-      )}
-
-      {/* Opened Capsules – only from partner */}
-      {receivedOpened.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Geöffnete Kapseln ({receivedOpened.length})
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <AnimatePresence mode="popLayout">
-              {receivedOpened.slice(0, MAX_SECTION_PREVIEW).map((capsule) => (
-                <CapsuleCard
-                  key={capsule.id}
-                  capsule={capsule}
-                  isRecipient
-                  defaultExpanded={capsule.id === justOpenedId}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-          {receivedOpened.length > MAX_SECTION_PREVIEW && (
-            <Link
-              href="/capsules/opened"
-              className="mt-4 flex items-center justify-center gap-1 rounded-xl border border-dashed px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
-            >
-              Alle geöffneten Kapseln
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          )}
-        </section>
-      )}
-
-      {/* Empty state */}
-      {capsules.length === 0 && (
-        <div className="flex flex-1 flex-col items-center justify-center">
-          <div className="mb-4 text-5xl">💊</div>
-          <h2 className="mb-2 text-lg font-semibold">Noch keine Kapseln</h2>
-          <p className="text-center text-sm text-muted-foreground">
-            Erstelle eine Kapsel für {recipientName}
-          </p>
-        </div>
-      )}
-
-      {!hasReceived && sent.length > 0 && (
-        <div className="mt-8 flex flex-col items-center justify-center text-center">
-          <div className="mb-3 text-4xl">💌</div>
-          <p className="text-sm text-muted-foreground">
-            Noch keine Kapseln von {recipientName} erhalten
-          </p>
-        </div>
-      )}
-
-      {/* Sent Capsules – show partner view status */}
-      {sent.length > 0 && (
-        <section className="mt-8">
-          <button
-            type="button"
-            onClick={() => setSentExpanded(!sentExpanded)}
-            className="flex w-full items-center gap-2 text-left"
-          >
-            <Send className="h-3.5 w-3.5 text-muted-foreground" />
-            <h2 className="flex-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Gesendete Kapseln ({sentOpenedCount}/{sent.length} angeschaut)
-            </h2>
-            <motion.span
-              animate={{ rotate: sentExpanded ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </motion.span>
-          </button>
-
-          <AnimatePresence>
-            {sentExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="mt-3 space-y-2">
-                  {sent.map((capsule) => (
-                    <SentCapsuleCard key={capsule.id} capsule={capsule} />
+        {/* Opened Capsules – horizontal scroll, no heading */}
+        {receivedOpened.length > 0 && (
+          <section className="mb-8">
+            <div className="-mx-4 overflow-x-auto px-4 pb-2 no-scrollbar">
+              <AnimatePresence mode="popLayout">
+                <div className="flex w-max snap-x snap-mandatory gap-3 pr-4">
+                  {receivedOpened.map((capsule) => (
+                    <OpenedCapsuleCard key={capsule.id} capsule={capsule} />
                   ))}
                 </div>
-              </motion.div>
+              </AnimatePresence>
+            </div>
+          </section>
+        )}
+
+        {/* Locked Capsules – only from partner */}
+        {receivedLocked.length > 0 && (
+          <section className="mb-8">
+            <h2 className="mb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Verschlossene Kapseln ({receivedLocked.length})
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              <AnimatePresence mode="popLayout">
+                {receivedLocked.slice(0, MAX_SECTION_PREVIEW).map((capsule) => (
+                  <CapsuleCard
+                    key={capsule.id}
+                    capsule={capsule}
+                    isRecipient
+                    onOpened={handleCapsuleOpened}
+                    onOverlayChange={setOverlayOpen}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+            {receivedLocked.length > MAX_SECTION_PREVIEW && (
+              <Link
+                href="/capsules/locked"
+                className="mt-4 flex items-center justify-center gap-1 rounded-xl border border-dashed px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              >
+                Alle verschlossenen Kapseln
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            )}
+          </section>
+        )}
+
+        {/* Empty state */}
+        {capsules.length === 0 && (
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <div className="mb-4 text-5xl">🕰️</div>
+            <h2 className="mb-2 text-lg font-semibold">Noch keine Kapseln</h2>
+            <p className="text-center text-sm text-muted-foreground">
+              Erstelle eine Kapsel für {recipientName}
+            </p>
+          </div>
+        )}
+
+        {!hasReceived && sent.length > 0 && (
+          <div className="mt-8 flex flex-col items-center justify-center text-center">
+            <div className="mb-3 text-4xl">💌</div>
+            <p className="text-sm text-muted-foreground">
+              Noch keine Kapseln von {recipientName} erhalten
+            </p>
+          </div>
+        )}
+
+        {/* Sent Capsules – show partner view status */}
+        {sent.length > 0 && (
+          <section className="mt-8">
+            <button
+              type="button"
+              onClick={() => setSentExpanded(!sentExpanded)}
+              className="flex w-full items-center gap-2 text-left"
+            >
+              <Send className="h-3.5 w-3.5 text-muted-foreground" />
+              <h2 className="flex-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Gesendete Kapseln ({sentOpenedCount}/{sent.length} angeschaut)
+              </h2>
+              <motion.span
+                animate={{ rotate: sentExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.span>
+            </button>
+
+            <AnimatePresence>
+              {sentExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 space-y-2">
+                    {sent.map((capsule) => (
+                      <SentCapsuleCard
+                        key={capsule.id}
+                        capsule={capsule}
+                        onDeleted={handleSentDeleted}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
+        )}
+      </div>
+
+      <div
+        className={cn(
+          "pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4",
+          FLOATING_OFFSET,
+        )}
+      >
+        <div className="flex w-full max-w-lg items-center justify-end gap-3">
+          <AnimatePresence>
+            {nextBadDayCapsule && (
+              <motion.button
+                type="button"
+                initial={{ opacity: 0, y: 16, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 16, scale: 0.96 }}
+                onClick={handleBadDayOverlayOpen}
+                className="pointer-events-auto flex h-14 max-w-[calc(100vw-7rem)] items-center gap-2 rounded-full bg-slate-700 px-5 text-sm font-semibold text-white shadow-lg transition-transform active:scale-95"
+              >
+                🥺 Heute ist doof
+              </motion.button>
             )}
           </AnimatePresence>
-        </section>
-      )}
 
-      <FAB href="/capsules/create" />
-    </div>
+          <Link
+            href="/capsules/create"
+            className={cn(
+              buttonVariants({ size: "icon" }),
+              "pointer-events-auto h-14 w-14 rounded-full shadow-lg",
+            )}
+          >
+            <Plus className="h-6 w-6" />
+          </Link>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {badDayOverlayCapsule && (
+          <CapsuleOpenOverlay
+            capsule={badDayOverlayCapsule}
+            onClose={handleBadDayOverlayClose}
+            onOpened={handleCapsuleOpened}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

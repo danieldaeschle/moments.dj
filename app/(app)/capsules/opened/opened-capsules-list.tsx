@@ -1,6 +1,6 @@
 "use client";
 
-import { CapsuleCard } from "@/components/capsule-card";
+import { OpenedCapsuleCard } from "@/components/capsule-card";
 import { AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -26,16 +26,18 @@ export function OpenedCapsulesList({ capsules }: Props) {
       </h1>
 
       {capsules.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="-mx-4 overflow-x-auto px-4 pb-2 no-scrollbar">
           <AnimatePresence mode="popLayout">
-            {capsules.map((capsule) => (
-              <CapsuleCard key={capsule.id} capsule={capsule} isRecipient />
-            ))}
+            <div className="flex w-max snap-x snap-mandatory gap-4 pr-4">
+              {capsules.map((capsule) => (
+                <OpenedCapsuleCard key={capsule.id} capsule={capsule} />
+              ))}
+            </div>
           </AnimatePresence>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
-          <div className="mb-4 text-5xl">💊</div>
+          <div className="mb-4 text-5xl">🕰️</div>
           <p className="text-sm text-muted-foreground">
             Noch keine geöffneten Kapseln
           </p>

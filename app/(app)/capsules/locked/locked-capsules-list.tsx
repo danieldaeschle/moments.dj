@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CapsuleCard } from "@/components/capsule-card";
 import { AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
@@ -11,6 +12,25 @@ type Props = {
 };
 
 export function LockedCapsulesList({ capsules }: Props) {
+  const [items, setItems] = useState(capsules);
+  const [overlayOpen, setOverlayOpen] = useState(false);
+
+  useEffect(() => {
+    if (!overlayOpen) {
+      setItems(capsules);
+    }
+  }, [capsules, overlayOpen]);
+
+  const visible = items.filter((capsule) => !capsule.opened_at);
+
+  function handleCapsuleOpened(id: string, openedAt: string) {
+    setItems((prev) =>
+      prev.map((capsule) =>
+        capsule.id === id ? { ...capsule, opened_at: openedAt } : capsule,
+      ),
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-lg px-4 pb-32 pt-4">
       <Link
@@ -22,15 +42,23 @@ export function LockedCapsulesList({ capsules }: Props) {
       </Link>
 
       <h1 className="mb-6 text-lg font-semibold">
-        Verschlossene Kapseln ({capsules.length})
+        Verschlossene Kapseln ({visible.length})
       </h1>
 
-      {capsules.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3">
+      {visible.length > 0 ? (
+        <div className="-mx-4 overflow-x-auto px-4 pb-2 no-scrollbar">
           <AnimatePresence mode="popLayout">
-            {capsules.map((capsule) => (
-              <CapsuleCard key={capsule.id} capsule={capsule} isRecipient />
-            ))}
+            <div className="flex w-max items-center gap-3 pr-4">
+              {visible.map((capsule) => (
+                <CapsuleCard
+                  key={capsule.id}
+                  capsule={capsule}
+                  isRecipient
+                  onOpened={handleCapsuleOpened}
+                  onOverlayChange={setOverlayOpen}
+                />
+              ))}
+            </div>
           </AnimatePresence>
         </div>
       ) : (

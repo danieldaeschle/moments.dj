@@ -1,7 +1,7 @@
 "use server";
 
 import { getPartnerProfile } from "@/lib/constants";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { sendPushToUser } from "@/lib/push";
 
@@ -78,7 +78,7 @@ export async function createCapsule(formData: FormData) {
     const authorName = profile?.display_name || "Jemand";
 
     await sendPushToUser(recipient.id, {
-      title: "Neue Kapsel 💊",
+      title: "Neue Zeitkapsel 🕰️",
       body: `${authorName} hat dir eine Kapsel geschickt`,
       url: "/capsules",
     });
@@ -177,4 +177,56 @@ export async function openBadDayCapsule() {
 
   revalidatePath("/capsules");
   return { success: true, capsuleId: capsule.id };
+}
+
+export async function deleteCapsule(id: string) {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Nicht angemeldet" };
+  }
+
+  const { data: capsule } = await supabase
+    .from("memory_capsules")
+    .select("id, author_id, opened_at, image_path")
+    .eq("id", id)
+    .single();
+
+  if (!capsule) {
+    return { error: "Kapsel nicht gefunden" };
+  }
+
+  if (capsule.author_id !== user.id) {
+    return { error: "Nicht berechtigt" };
+  }
+
+  if (capsule.opened_at) {
+    return { error: "Geöffnete Kapseln können nicht gelöscht werden" };
+  }
+
+  const { data: deletedCapsule, error } = await admin
+    .from("memory_capsules")
+    .delete()
+    .eq("id", id)
+    .is("opened_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !deletedCapsule) {
+    return { error: error?.message ?? "Kapsel konnte nicht gelöscht werden" };
+  }
+
+  if (capsule.image_path) {
+    await admin.storage.from("moment-images").remove([capsule.image_path]);
+  }
+
+  revalidatePath("/capsules");
+  revalidatePath("/capsules/locked");
+  revalidatePath("/capsules/opened");
+
+  return { success: true };
 }

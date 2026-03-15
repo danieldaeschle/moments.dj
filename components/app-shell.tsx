@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
-import { LogOut, Pill, Sparkle } from "lucide-react";
+import { Archive, LogOut, Sparkle } from "lucide-react";
 import { InstallPrompt } from "@/components/install-prompt";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { useSwUpdate } from "@/hooks/use-sw-update";
@@ -76,7 +76,7 @@ export function AppShell({ children }: Props) {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Pill className="h-5 w-5" />
+              <Archive className="h-5 w-5" />
               Kapseln
             </Link>
           </div>
