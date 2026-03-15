@@ -338,7 +338,7 @@ export function OpenedCapsuleCard({ capsule }: OpenedCapsuleCardProps) {
               {/* Close button */}
               <button
                 onClick={() => setShowDetail(false)}
-                className="absolute top-4 right-4 z-10 rounded-full bg-black/40 p-2 text-white transition-colors hover:bg-black/60"
+                className="absolute top-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -367,7 +367,7 @@ export function OpenedCapsuleCard({ capsule }: OpenedCapsuleCardProps) {
                     rel="noopener noreferrer"
                     className={cn(
                       buttonVariants({ variant: "secondary", size: "icon" }),
-                      "absolute right-2 bottom-2 h-9 w-9 rounded-full shadow-md",
+                      "absolute right-2 bottom-2 rounded-full shadow-md",
                     )}
                   >
                     <Download className="h-4 w-4" />
@@ -447,7 +447,7 @@ export function SentCapsuleCard({ capsule, onDeleted }: SentCapsuleCardProps) {
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
             aria-label="Kapsel löschen"
           >
             <Trash2 className="h-4 w-4 shrink-0" />

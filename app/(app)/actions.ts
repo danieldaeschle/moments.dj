@@ -22,6 +22,7 @@ export async function createMoment(formData: FormData) {
   const momentDate =
     (formData.get("moment_date") as string) ||
     new Date().toISOString().slice(0, 10);
+  const momentTime = (formData.get("moment_time") as string) || null;
 
   if (!title?.trim()) {
     return { error: "Titel ist erforderlich" };
@@ -33,6 +34,7 @@ export async function createMoment(formData: FormData) {
     text: text?.trim() || null,
     image_path: imagePath,
     moment_date: momentDate,
+    moment_time: momentTime || null,
   });
 
   if (error) {
@@ -108,6 +110,7 @@ export async function updateMoment(id: string, formData: FormData) {
   const imagePath = formData.get("image_path") as string | null;
   const removeImage = formData.get("remove_image") === "true";
   const momentDate = (formData.get("moment_date") as string) || undefined;
+  const momentTime = formData.get("moment_time") as string | null;
 
   if (!title?.trim()) {
     return { error: "Titel ist erforderlich" };
@@ -118,7 +121,9 @@ export async function updateMoment(id: string, formData: FormData) {
     existing.image_path &&
     (removeImage || (imagePath && imagePath !== existing.image_path))
   ) {
-    await supabase.storage.from("moment-images").remove([existing.image_path]);
+    await supabase.storage
+      .from("moment-images")
+      .remove([existing.image_path, `originals/${existing.image_path}`]);
   }
 
   const updates: Record<string, unknown> = {
@@ -135,6 +140,8 @@ export async function updateMoment(id: string, formData: FormData) {
   if (momentDate) {
     updates.moment_date = momentDate;
   }
+
+  updates.moment_time = momentTime || null;
 
   const { error } = await supabase.from("moments").update(updates).eq("id", id);
 
@@ -172,7 +179,9 @@ export async function deleteMoment(id: string) {
 
   // Delete image from storage if it exists
   if (moment.image_path) {
-    await supabase.storage.from("moment-images").remove([moment.image_path]);
+    await supabase.storage
+      .from("moment-images")
+      .remove([moment.image_path, `originals/${moment.image_path}`]);
   }
 
   const { error } = await supabase.from("moments").delete().eq("id", id);

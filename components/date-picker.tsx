@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Clock } from "lucide-react";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -38,9 +38,11 @@ function toDateString(y: number, m: number, d: number) {
 type Props = {
   value: string; // "YYYY-MM-DD"
   onChange: (value: string) => void;
+  time?: string; // "HH:MM" or ""
+  onTimeChange?: (value: string) => void;
 };
 
-export function DatePicker({ value, onChange }: Props) {
+export function DatePicker({ value, onChange, time, onTimeChange }: Props) {
   const [open, setOpen] = useState(false);
 
   const selectedDate = useMemo(() => {
@@ -105,7 +107,10 @@ export function DatePicker({ value, onChange }: Props) {
         className="flex h-12 w-full items-center gap-3 rounded-md border bg-background px-3 text-base text-foreground"
       >
         <CalendarDays className="h-5 w-5 text-muted-foreground" />
-        <span>{formatDisplay(value)}</span>
+        <span>
+          {formatDisplay(value)}
+          {time ? `, ${time} Uhr` : ""}
+        </span>
       </button>
 
       {/* Centered overlay */}
@@ -178,6 +183,29 @@ export function DatePicker({ value, onChange }: Props) {
                 );
               })}
             </div>
+
+            {/* Time input */}
+            {onTimeChange && (
+              <div className="mt-3 flex items-center gap-2 border-t pt-3">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Uhrzeit</span>
+                <input
+                  type="time"
+                  value={time || ""}
+                  onChange={(e) => onTimeChange(e.target.value)}
+                  className="ml-auto h-10 rounded-md border bg-background px-3 text-sm text-foreground"
+                />
+                {time && (
+                  <button
+                    type="button"
+                    onClick={() => onTimeChange("")}
+                    className="text-xs text-muted-foreground underline"
+                  >
+                    Löschen
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

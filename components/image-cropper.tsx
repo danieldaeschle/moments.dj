@@ -53,7 +53,7 @@ export function ImageCropper({
         <h2 className="text-base font-semibold text-white">Bild zuschneiden</h2>
         <button
           onClick={onClose}
-          className="rounded-full p-1.5 text-white/70 hover:bg-white/10 hover:text-white"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
         >
           <X className="h-5 w-5" />
         </button>
@@ -80,13 +80,12 @@ export function ImageCropper({
       <div className="flex items-center justify-center gap-3 px-4 py-4">
         <Button
           variant="outline"
-          size="sm"
           onClick={onClose}
           className="border-white/20 bg-white/10 text-white hover:bg-white/20"
         >
           Abbrechen
         </Button>
-        <Button size="sm" onClick={handleConfirm} disabled={!completedCrop}>
+        <Button onClick={handleConfirm} disabled={!completedCrop}>
           <Check className="mr-1.5 h-4 w-4" />
           Zuschneiden
         </Button>

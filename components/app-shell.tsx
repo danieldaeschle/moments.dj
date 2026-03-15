@@ -72,10 +72,10 @@ export function AppShell({ children }: Props) {
           <Button
             variant="ghost"
             size="icon"
-            className="ml-auto h-8 w-8 text-muted-foreground"
+            className="ml-auto text-muted-foreground"
             onClick={handleSignOut}
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </header>

@@ -221,7 +221,10 @@ export async function deleteCapsule(id: string) {
   }
 
   if (capsule.image_path) {
-    await admin.storage.from("moment-images").remove([capsule.image_path]);
+    await admin.storage.from("moment-images").remove([
+      capsule.image_path,
+      `originals/${capsule.image_path}`,
+    ]);
   }
 
   revalidatePath("/capsules");

@@ -4,12 +4,11 @@ import type { MomentWithAuthor } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import Image from "next/image";
 import Link from "next/link";
-import { getImageUrl } from "@/lib/image-utils";
-import { Pencil, Download, X } from "lucide-react";
+import { getImageUrl, getOriginalImageUrl } from "@/lib/image-utils";
+import { Pencil, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type Props = {
   moment: MomentWithAuthor | null;
@@ -18,6 +17,16 @@ type Props = {
 };
 
 export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (moment?.image_path) {
+      setImgSrc(getOriginalImageUrl(moment.image_path));
+    } else {
+      setImgSrc(null);
+    }
+  }, [moment?.image_path]);
+
   useEffect(() => {
     if (!moment) return;
     const onKey = (e: KeyboardEvent) => {
@@ -45,7 +54,7 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
         {/* Close button */}
         <button
           onClick={() => onOpenChange(false)}
-          className="absolute top-4 right-4 z-10 rounded-full bg-black/40 p-2 text-white transition-colors hover:bg-black/60"
+          className="absolute top-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60"
         >
           <X className="h-5 w-5" />
         </button>
@@ -57,28 +66,15 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
         </div>
 
         {/* Image */}
-        {moment.image_path && (
+        {moment.image_path && imgSrc && (
           <div className="relative w-full overflow-hidden rounded-xl">
-            <Image
-              src={getImageUrl(moment.image_path)}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imgSrc}
               alt={moment.title}
-              width={1600}
-              height={1200}
               className="h-auto max-h-[70vh] w-full rounded-xl object-contain"
-              sizes="(max-width: 512px) 92vw, 480px"
+              onError={() => setImgSrc(getImageUrl(moment.image_path!))}
             />
-            <a
-              href={getImageUrl(moment.image_path)}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: "secondary", size: "icon" }),
-                "absolute right-2 bottom-2 h-9 w-9 rounded-full shadow-md",
-              )}
-            >
-              <Download className="h-4 w-4" />
-            </a>
           </div>
         )}
 
@@ -94,6 +90,7 @@ export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
           {format(new Date(moment.moment_date + "T00:00:00"), "PPP", {
             locale: de,
           })}
+          {moment.moment_time ? `, ${moment.moment_time} Uhr` : ""}
         </p>
 
         {/* Edit button – fixed at bottom */}

@@ -13,6 +13,7 @@ export type Moment = {
   text: string | null;
   image_path: string | null;
   moment_date: string;
+  moment_time: string | null;
   created_at: string;
 };
 

@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { compressImage } from "@/lib/image-utils";
+import { compressImage, extractExifDate } from "@/lib/image-utils";
+import type { ExifDateTime } from "@/lib/image-utils";
 import { createMoment } from "@/app/(app)/actions";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/date-picker";
@@ -24,16 +25,21 @@ export default function CreateMomentPage() {
   const [date, setDate] = useState<string>(() =>
     new Date().toISOString().slice(0, 10),
   );
+  const [time, setTime] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [exifPrompt, setExifPrompt] = useState<ExifDateTime | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     setCropSrc(url);
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    const exif = await extractExifDate(file);
+    if (exif) setExifPrompt(exif);
   }
 
   function handleCropComplete(croppedFile: File) {
@@ -68,11 +74,15 @@ export default function CreateMomentPage() {
         const ext = imageFile.name.split(".").pop() || "jpg";
         const path = `${user.id}/${Date.now()}.${ext}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("moment-images")
-          .upload(path, compressed);
+        const [compressedResult, originalResult] = await Promise.all([
+          supabase.storage.from("moment-images").upload(path, compressed),
+          supabase.storage
+            .from("moment-images")
+            .upload(`originals/${path}`, imageFile),
+        ]);
 
-        if (uploadError) throw uploadError;
+        if (compressedResult.error) throw compressedResult.error;
+        if (originalResult.error) throw originalResult.error;
         imagePath = path;
       }
 
@@ -81,6 +91,7 @@ export default function CreateMomentPage() {
       if (text.trim()) formData.set("text", text.trim());
       if (imagePath) formData.set("image_path", imagePath);
       formData.set("moment_date", date);
+      if (time) formData.set("moment_time", time);
 
       const result = await createMoment(formData);
       if (result.error) {
@@ -99,12 +110,7 @@ export default function CreateMomentPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col px-4 pb-8 pt-4">
       <div className="mb-6 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9"
-          onClick={() => router.back()}
-        >
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-lg font-semibold">Neuer Moment</h1>
@@ -123,7 +129,12 @@ export default function CreateMomentPage() {
         </div>
         <div className="space-y-2">
           <Label>Datum</Label>
-          <DatePicker value={date} onChange={setDate} />
+          <DatePicker
+            value={date}
+            onChange={setDate}
+            time={time}
+            onTimeChange={setTime}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="moment-text">Notizen (optional)</Label>
@@ -147,11 +158,11 @@ export default function CreateMomentPage() {
                 height={360}
                 className="max-h-48 w-full rounded-lg object-cover"
               />
-              <div className="absolute right-2 top-2 flex gap-1">
+              <div className="absolute right-2 top-2 flex gap-1.5">
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="h-7 w-7 rounded-full"
+                  className="rounded-full shadow-sm"
                   onClick={() => setCropSrc(imagePreview!)}
                 >
                   <CropIcon className="h-4 w-4" />
@@ -159,7 +170,7 @@ export default function CreateMomentPage() {
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="h-7 w-7 rounded-full"
+                  className="rounded-full shadow-sm"
                   onClick={() => {
                     setImageFile(null);
                     if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -197,6 +208,52 @@ export default function CreateMomentPage() {
           onClose={handleCropClose}
           onCropComplete={handleCropComplete}
         />
+      )}
+
+      {exifPrompt && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50"
+          onClick={() => setExifPrompt(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-background p-5 shadow-lg space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-medium">
+              Das Foto wurde am{" "}
+              <span className="font-semibold">
+                {new Date(
+                  exifPrompt.date + "T" + exifPrompt.time,
+                ).toLocaleDateString("de-DE", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}{" "}
+                um {exifPrompt.time} Uhr
+              </span>{" "}
+              aufgenommen. Datum und Uhrzeit übernehmen?
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setExifPrompt(null)}
+              >
+                Nein
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  setDate(exifPrompt.date);
+                  setTime(exifPrompt.time);
+                  setExifPrompt(null);
+                }}
+              >
+                Übernehmen
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="mt-8">

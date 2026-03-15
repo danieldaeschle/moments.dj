@@ -45,8 +45,10 @@ export function CreateCapsuleForm({ recipientName }: Props) {
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFile(file);
     const url = URL.createObjectURL(file);
-    setCropSrc(url);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(url);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -82,11 +84,15 @@ export function CreateCapsuleForm({ recipientName }: Props) {
         const ext = imageFile.name.split(".").pop() || "jpg";
         const path = `${user.id}/${Date.now()}.${ext}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("moment-images")
-          .upload(path, compressed);
+        const [compressedResult, originalResult] = await Promise.all([
+          supabase.storage.from("moment-images").upload(path, compressed),
+          supabase.storage
+            .from("moment-images")
+            .upload(`originals/${path}`, imageFile),
+        ]);
 
-        if (uploadError) throw uploadError;
+        if (compressedResult.error) throw compressedResult.error;
+        if (originalResult.error) throw originalResult.error;
         imagePath = path;
       }
 
@@ -114,12 +120,7 @@ export function CreateCapsuleForm({ recipientName }: Props) {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col px-4 pb-8 pt-4">
       <div className="mb-6 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9"
-          onClick={() => router.back()}
-        >
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-lg font-semibold">
@@ -186,11 +187,11 @@ export function CreateCapsuleForm({ recipientName }: Props) {
                 height={360}
                 className="max-h-48 w-full rounded-lg object-cover"
               />
-              <div className="absolute right-2 top-2 flex gap-1">
+              <div className="absolute right-2 top-2 flex gap-1.5">
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="h-7 w-7 rounded-full"
+                  className="rounded-full shadow-sm"
                   onClick={() => setCropSrc(imagePreview!)}
                 >
                   <CropIcon className="h-4 w-4" />
@@ -198,7 +199,7 @@ export function CreateCapsuleForm({ recipientName }: Props) {
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="h-7 w-7 rounded-full"
+                  className="rounded-full shadow-sm"
                   onClick={() => {
                     setImageFile(null);
                     if (imagePreview) URL.revokeObjectURL(imagePreview);

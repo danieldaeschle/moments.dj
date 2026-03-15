@@ -19,7 +19,7 @@ export function TimelineItem({ moment, onSelect }: Props) {
       {/* Left emoji marker */}
       <div
         data-emoji-marker
-        className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background text-base shadow-sm"
+        className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center text-3xl"
       >
         {moment.profiles.emoji}
       </div>
@@ -68,6 +68,7 @@ function ItemCard({
             {format(new Date(moment.moment_date + "T00:00:00"), "d. MMM yyyy", {
               locale: de,
             })}
+            {moment.moment_time ? `, ${moment.moment_time} Uhr` : ""}
           </p>
           <h3 className="text-sm font-medium leading-snug">{moment.title}</h3>
           {moment.text && (
