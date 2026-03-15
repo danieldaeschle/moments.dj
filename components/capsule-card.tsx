@@ -111,7 +111,7 @@ export function CapsuleOpenOverlay({
               animate={{ rotate: [0, -8, 8, -8, 8, -5, 5, -3, 3, 0] }}
               transition={{ duration: 1, delay: 0.4, ease: "easeInOut" }}
               onAnimationComplete={handleShakeComplete}
-              className="relative isolate w-28 min-h-48 overflow-hidden rounded-sm border border-slate-400/50 bg-linear-to-r from-slate-400/70 via-slate-200 to-slate-400/70 px-3 py-6 text-center shadow-[0_20px_60px_-20px_rgba(15,23,42,0.5)] dark:border-slate-500/40 dark:from-slate-600/80 dark:via-slate-500 dark:to-slate-600/80"
+              className="relative isolate w-28 min-h-48 overflow-hidden rounded-xs border border-slate-400/50 bg-linear-to-r from-slate-400/70 via-slate-200 to-slate-400/70 px-3 py-6 text-center shadow-[0_20px_60px_-20px_rgba(15,23,42,0.5)] dark:border-slate-500/40 dark:from-slate-600/80 dark:via-slate-500 dark:to-slate-600/80"
             >
               {/* Top cap highlight */}
               <div className="absolute inset-x-0 top-0 h-5 bg-linear-to-b from-white/35 to-transparent dark:from-white/12" />
@@ -142,9 +142,7 @@ export function CapsuleOpenOverlay({
                   { locale: de },
                 )}
               </p>
-              <p className="mt-1 text-base font-semibold">
-                {capsule.title}
-              </p>
+              <p className="mt-1 text-base font-semibold">{capsule.title}</p>
               <div className="my-4 h-px bg-border" />
               <p className="whitespace-pre-wrap text-sm leading-relaxed">
                 {capsule.message}

@@ -8,6 +8,9 @@ import { Archive, LogOut, Sparkle } from "lucide-react";
 import { InstallPrompt } from "@/components/install-prompt";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { useSwUpdate } from "@/hooks/use-sw-update";
+import { useCallback, useRef } from "react";
+import { toast } from "sonner";
+import { testPushNotification } from "@/app/(app)/actions";
 
 const isDev = process.env.NODE_ENV === "development";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -24,6 +27,26 @@ export function AppShell({ children }: Props) {
   const { updateAvailable, applyUpdate } = useSwUpdate();
   usePushNotifications();
 
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTitleClick = useCallback(() => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    if (tapCountRef.current >= 3) {
+      tapCountRef.current = 0;
+      toast.promise(testPushNotification(), {
+        loading: "Push-Test wird gesendet…",
+        success: (result) => result.diagnostics.join("\n"),
+        error: "Test fehlgeschlagen",
+      });
+      return;
+    }
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 800);
+  }, []);
+
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -34,7 +57,10 @@ export function AppShell({ children }: Props) {
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 items-center justify-between px-4">
-          <h1 className="text-base font-semibold tracking-tight">
+          <h1
+            className="text-base font-semibold tracking-tight cursor-pointer select-none"
+            onClick={handleTitleClick}
+          >
             Unsere Momente
           </h1>
           <Button
