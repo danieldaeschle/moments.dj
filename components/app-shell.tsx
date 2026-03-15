@@ -30,16 +30,22 @@ export function AppShell({ children }: Props) {
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleTitleClick = useCallback(() => {
+  const handleTitleClick = useCallback(async () => {
     tapCountRef.current += 1;
     if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
     if (tapCountRef.current >= 3) {
       tapCountRef.current = 0;
-      toast.promise(testPushNotification(), {
-        loading: "Push-Test wird gesendet…",
-        success: (result) => result.diagnostics.join("\n"),
-        error: "Test fehlgeschlagen",
-      });
+      try {
+        const result = await testPushNotification();
+        toast(result.diagnostics.join("\n"), {
+          duration: 10000,
+        });
+      } catch (err) {
+        toast.error(
+          `Server-Fehler: ${err instanceof Error ? err.message : String(err)}`,
+          { duration: 10000 },
+        );
+      }
       return;
     }
     tapTimerRef.current = setTimeout(() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Eye, EyeOff, LockKeyhole, Trash2 } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Trash2, X, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { deleteCapsule, openCapsule } from "@/app/(app)/capsules/actions";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import type { CapsuleWithProfiles } from "@/lib/types";
 import Image from "next/image";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 function canOpen(capsule: CapsuleWithProfiles) {
   if (capsule.opened_at) return false;
@@ -326,55 +328,67 @@ export function OpenedCapsuleCard({ capsule }: OpenedCapsuleCardProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-xl bg-black/60"
             onClick={() => setShowDetail(false)}
           >
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.9 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="mx-6 w-full max-w-sm"
+            <div
+              className="relative flex h-full w-full max-w-lg flex-col items-center justify-center p-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="rounded-2xl border bg-background p-6 shadow-xl">
-                <p className="mb-1 text-xs text-muted-foreground">
-                  {format(new Date(capsule.opened_at!), "d. MMM yyyy", {
-                    locale: de,
-                  })}
-                </p>
-                <p className="text-base font-semibold">{capsule.title}</p>
-                <div className="my-4 h-px bg-border" />
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {capsule.message}
-                </p>
+              {/* Close button */}
+              <button
+                onClick={() => setShowDetail(false)}
+                className="absolute top-4 right-4 z-10 rounded-full bg-black/40 p-2 text-white transition-colors hover:bg-black/60"
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-                {capsule.image_path && (
+              {/* Title */}
+              <div className="mb-3 flex items-center gap-2 text-white">
+                <span className="text-2xl">{capsule.author.emoji}</span>
+                <span className="text-lg font-semibold">{capsule.title}</span>
+              </div>
+
+              {/* Image */}
+              {capsule.image_path && (
+                <div className="relative w-full overflow-hidden rounded-xl">
                   <Image
                     src={getImageUrl(capsule.image_path)}
-                    alt=""
-                    width={480}
-                    height={360}
-                    className="mt-4 w-full rounded-xl object-cover"
+                    alt={capsule.title}
+                    width={1600}
+                    height={1200}
+                    className="h-auto max-h-[70vh] w-full rounded-xl object-contain"
+                    sizes="(max-width: 512px) 92vw, 480px"
                   />
-                )}
+                  <a
+                    href={getImageUrl(capsule.image_path)}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      buttonVariants({ variant: "secondary", size: "icon" }),
+                      "absolute right-2 bottom-2 h-9 w-9 rounded-full shadow-md",
+                    )}
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                </div>
+              )}
 
-                <p className="mt-4 text-center text-[10px] text-muted-foreground">
-                  Von {capsule.author.display_name} ·{" "}
-                  {format(new Date(capsule.created_at), "d. MMM yyyy", {
-                    locale: de,
-                  })}
+              {/* Message */}
+              {capsule.message && (
+                <p className="mt-3 max-w-md whitespace-pre-wrap text-center text-sm text-white/90">
+                  {capsule.message}
                 </p>
+              )}
 
-                <button
-                  type="button"
-                  onClick={() => setShowDetail(false)}
-                  className="mt-6 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors active:bg-primary/90"
-                >
-                  Schließen
-                </button>
-              </div>
-            </motion.div>
+              {/* Date */}
+              <p className="mt-2 text-xs text-white/60">
+                {format(new Date(capsule.opened_at!), "PPP", {
+                  locale: de,
+                })}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

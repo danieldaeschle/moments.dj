@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage, getImageUrl } from "@/lib/image-utils";
 import { updateMoment, deleteMoment } from "@/app/(app)/actions";
 import { toast } from "sonner";
-import { ArrowLeft, ImagePlus, Loader2, X, Trash2 } from "lucide-react";
+import { ArrowLeft, CropIcon, ImagePlus, Loader2, X, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { ImageCropper } from "@/components/image-cropper";
 import type { MomentWithAuthor } from "@/lib/types";
@@ -165,6 +165,8 @@ export function EditMomentForm({ moment }: Props) {
                 <Image
                   src={imagePreview}
                   alt="Vorschau"
+                  width={480}
+                  height={360}
                   className="max-h-48 w-full rounded-lg object-cover"
                 />
               ) : (
@@ -178,19 +180,35 @@ export function EditMomentForm({ moment }: Props) {
                   />
                 </div>
               )}
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute right-2 top-2 h-7 w-7 rounded-full"
-                onClick={() => {
-                  setImageFile(null);
-                  if (imagePreview) URL.revokeObjectURL(imagePreview);
-                  setImagePreview(null);
-                  setRemoveImage(true);
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="absolute right-2 top-2 flex gap-1">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-7 w-7 rounded-full"
+                  onClick={() => {
+                    if (imagePreview) {
+                      setCropSrc(imagePreview);
+                    } else if (moment.image_path) {
+                      setCropSrc(getImageUrl(moment.image_path));
+                    }
+                  }}
+                >
+                  <CropIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-7 w-7 rounded-full"
+                  onClick={() => {
+                    setImageFile(null);
+                    if (imagePreview) URL.revokeObjectURL(imagePreview);
+                    setImagePreview(null);
+                    setRemoveImage(true);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ) : (
             <button

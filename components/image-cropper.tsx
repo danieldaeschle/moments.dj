@@ -70,6 +70,7 @@ export function ImageCropper({
             ref={imgRef}
             src={imageSrc}
             alt="Zuschneiden"
+            crossOrigin="anonymous"
             onLoad={onImageLoad}
             className="max-h-[calc(100vh-10rem)] max-w-full object-contain"
           />

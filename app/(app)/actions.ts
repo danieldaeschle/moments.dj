@@ -191,52 +191,54 @@ export async function testPushNotification(): Promise<{
 }> {
   const diagnostics: string[] = [];
 
-  const hasPublicKey = !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const hasPrivateKey = !!process.env.VAPID_PRIVATE_KEY;
-  const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  diagnostics.push(`VAPID public key: ${hasPublicKey ? "✅" : "❌"}`);
-  diagnostics.push(`VAPID private key: ${hasPrivateKey ? "✅" : "❌"}`);
-  diagnostics.push(`Service role key: ${hasServiceKey ? "✅" : "❌"}`);
-
-  if (!hasPublicKey || !hasPrivateKey) {
-    diagnostics.push("⛔ VAPID-Keys fehlen → Push kann nicht gesendet werden");
-    return { ok: false, diagnostics };
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    diagnostics.push("⛔ Nicht angemeldet");
-    return { ok: false, diagnostics };
-  }
-
-  diagnostics.push(`User: ${user.email}`);
-
-  const admin = createAdminClient();
-  const { data: subs, error: subError } = await admin
-    .from("push_subscriptions")
-    .select("endpoint")
-    .eq("user_id", user.id);
-
-  if (subError) {
-    diagnostics.push(`⛔ DB-Fehler: ${subError.message}`);
-    return { ok: false, diagnostics };
-  }
-
-  diagnostics.push(`Push-Subscriptions: ${subs?.length ?? 0}`);
-
-  if (!subs?.length) {
-    diagnostics.push(
-      "⛔ Keine Subscriptions → Browser hat Push nicht registriert",
-    );
-    return { ok: false, diagnostics };
-  }
-
   try {
+    const hasPublicKey = !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const hasPrivateKey = !!process.env.VAPID_PRIVATE_KEY;
+    const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    diagnostics.push(`VAPID public key: ${hasPublicKey ? "✅" : "❌"}`);
+    diagnostics.push(`VAPID private key: ${hasPrivateKey ? "✅" : "❌"}`);
+    diagnostics.push(`Service role key: ${hasServiceKey ? "✅" : "❌"}`);
+
+    if (!hasPublicKey || !hasPrivateKey) {
+      diagnostics.push(
+        "⛔ VAPID-Keys fehlen → Push kann nicht gesendet werden",
+      );
+      return { ok: false, diagnostics };
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      diagnostics.push("⛔ Nicht angemeldet");
+      return { ok: false, diagnostics };
+    }
+
+    diagnostics.push(`User: ${user.email}`);
+
+    const admin = createAdminClient();
+    const { data: subs, error: subError } = await admin
+      .from("push_subscriptions")
+      .select("endpoint")
+      .eq("user_id", user.id);
+
+    if (subError) {
+      diagnostics.push(`⛔ DB-Fehler: ${subError.message}`);
+      return { ok: false, diagnostics };
+    }
+
+    diagnostics.push(`Push-Subscriptions: ${subs?.length ?? 0}`);
+
+    if (!subs?.length) {
+      diagnostics.push(
+        "⛔ Keine Subscriptions → Browser hat Push nicht registriert",
+      );
+      return { ok: false, diagnostics };
+    }
+
     await sendPushToUser(user.id, {
       title: "Test-Notification 🔔",
       body: "Push funktioniert!",
@@ -246,7 +248,7 @@ export async function testPushNotification(): Promise<{
     return { ok: true, diagnostics };
   } catch (err) {
     diagnostics.push(
-      `⛔ Push fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`,
+      `⛔ Exception: ${err instanceof Error ? err.message : String(err)}`,
     );
     return { ok: false, diagnostics };
   }
