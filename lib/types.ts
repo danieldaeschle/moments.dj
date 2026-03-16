@@ -19,6 +19,9 @@ export type Moment = {
   song_deezer_id: string | null;
   song_cover_url: string | null;
   song_spotify_url: string | null;
+  location_name: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
   created_at: string;
 };
 

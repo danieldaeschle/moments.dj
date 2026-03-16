@@ -28,6 +28,13 @@ export async function createMoment(formData: FormData) {
   const songDeezerId = (formData.get("song_deezer_id") as string) || null;
   const songCoverUrl = (formData.get("song_cover_url") as string) || null;
   const songSpotifyUrl = (formData.get("song_spotify_url") as string) || null;
+  const locationName = (formData.get("location_name") as string) || null;
+  const locationLat = formData.get("location_lat")
+    ? parseFloat(formData.get("location_lat") as string)
+    : null;
+  const locationLng = formData.get("location_lng")
+    ? parseFloat(formData.get("location_lng") as string)
+    : null;
 
   if (!title?.trim()) {
     return { error: "Titel ist erforderlich" };
@@ -45,6 +52,9 @@ export async function createMoment(formData: FormData) {
     song_deezer_id: songDeezerId,
     song_cover_url: songCoverUrl,
     song_spotify_url: songSpotifyUrl,
+    location_name: locationName,
+    location_lat: locationLat,
+    location_lng: locationLng,
   });
 
   if (error) {
@@ -127,6 +137,14 @@ export async function updateMoment(id: string, formData: FormData) {
   const songCoverUrl = (formData.get("song_cover_url") as string) || null;
   const songSpotifyUrl = (formData.get("song_spotify_url") as string) || null;
   const removeSong = formData.get("remove_song") === "true";
+  const locationName = (formData.get("location_name") as string) || null;
+  const locationLat = formData.get("location_lat")
+    ? parseFloat(formData.get("location_lat") as string)
+    : null;
+  const locationLng = formData.get("location_lng")
+    ? parseFloat(formData.get("location_lng") as string)
+    : null;
+  const removeLocation = formData.get("remove_location") === "true";
 
   if (!title?.trim()) {
     return { error: "Titel ist erforderlich" };
@@ -171,6 +189,16 @@ export async function updateMoment(id: string, formData: FormData) {
     updates.song_deezer_id = songDeezerId;
     updates.song_cover_url = songCoverUrl;
     updates.song_spotify_url = songSpotifyUrl;
+  }
+
+  if (removeLocation) {
+    updates.location_name = null;
+    updates.location_lat = null;
+    updates.location_lng = null;
+  } else if (locationName) {
+    updates.location_name = locationName;
+    updates.location_lat = locationLat;
+    updates.location_lng = locationLng;
   }
 
   const { error } = await supabase.from("moments").update(updates).eq("id", id);

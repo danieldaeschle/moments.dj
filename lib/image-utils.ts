@@ -22,6 +22,11 @@ export type ExifDateTime = {
   time: string; // "HH:MM"
 };
 
+export type ExifLocation = {
+  lat: number;
+  lng: number;
+};
+
 export async function extractExifDate(
   file: File,
 ): Promise<ExifDateTime | null> {
@@ -37,6 +42,23 @@ export async function extractExifDate(
     const mm = String(dt.getMinutes()).padStart(2, "0");
 
     return { date: `${y}-${m}-${d}`, time: `${hh}:${mm}` };
+  } catch {
+    return null;
+  }
+}
+
+export async function extractExifLocation(
+  file: File,
+): Promise<ExifLocation | null> {
+  try {
+    const exif = await exifr.gps(file);
+    if (
+      !exif ||
+      typeof exif.latitude !== "number" ||
+      typeof exif.longitude !== "number"
+    )
+      return null;
+    return { lat: exif.latitude, lng: exif.longitude };
   } catch {
     return null;
   }

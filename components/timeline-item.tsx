@@ -7,7 +7,7 @@ import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/image-utils";
-import { Heart, Loader2 } from "lucide-react";
+import { Heart, Loader2, MapPin } from "lucide-react";
 import { toggleLike } from "@/app/(app)/actions";
 import { useTransition } from "react";
 import { cn } from "@/lib/utils";
@@ -111,7 +111,10 @@ function ItemCard({
           <CardContent className="py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="mb-2 text-xs text-muted-foreground/70">
+                <h3 className="text-sm font-medium leading-snug">
+                  {moment.title}
+                </h3>
+                <p className="text-xs text-muted-foreground/70">
                   {format(
                     new Date(moment.moment_date + "T00:00:00"),
                     "d. MMM yyyy",
@@ -121,9 +124,12 @@ function ItemCard({
                   )}
                   {moment.moment_time ? `, ${moment.moment_time} Uhr` : ""}
                 </p>
-                <h3 className="text-sm font-medium leading-snug">
-                  {moment.title}
-                </h3>
+                {moment.location_name && (
+                  <p className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{moment.location_name}</span>
+                  </p>
+                )}
                 {moment.text && (
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                     {moment.text}

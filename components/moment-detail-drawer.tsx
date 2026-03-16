@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import Link from "next/link";
 import { getImageUrl, getOriginalImageUrl } from "@/lib/image-utils";
-import { Pencil, X } from "lucide-react";
+import { Pencil, X, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { SongPlayer } from "@/components/song-player";
@@ -113,6 +113,14 @@ export function MomentDetailDrawer({
           })}
           {moment.moment_time ? `, ${moment.moment_time} Uhr` : ""}
         </p>
+
+        {/* Location */}
+        {moment.location_name && (
+          <p className="mt-1 flex items-center gap-1 text-xs text-white/60">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span>{moment.location_name}</span>
+          </p>
+        )}
 
         {/* Edit button – fixed at bottom */}
         {isOwn && (

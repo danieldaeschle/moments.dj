@@ -7,12 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { compressImage, extractExifDate } from "@/lib/image-utils";
-import type { ExifDateTime } from "@/lib/image-utils";
+import {
+  compressImage,
+  extractExifDate,
+  extractExifLocation,
+} from "@/lib/image-utils";
+import type { ExifDateTime, ExifLocation } from "@/lib/image-utils";
 import { createMoment } from "@/app/(app)/actions";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/date-picker";
 import { SongSearch } from "@/components/song-search";
+import { LocationSearch } from "@/components/location-search";
+import type { Location } from "@/components/location-search";
 import { ArrowLeft, CropIcon, ImagePlus, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { ImageCropper } from "@/components/image-cropper";
@@ -30,8 +36,12 @@ export default function CreateMomentPage() {
   const [time, setTime] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [song, setSong] = useState<Song | null>(null);
+  const [location, setLocation] = useState<Location | null>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [exifPrompt, setExifPrompt] = useState<ExifDateTime | null>(null);
+  const [exifLocationPrompt, setExifLocationPrompt] =
+    useState<ExifLocation | null>(null);
+  const [exifLocationName, setExifLocationName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -43,6 +53,35 @@ export default function CreateMomentPage() {
 
     const exif = await extractExifDate(file);
     if (exif) setExifPrompt(exif);
+
+    const gps = await extractExifLocation(file);
+    if (gps) {
+      // Reverse geocode to get a human-readable name
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${gps.lat}&lon=${gps.lng}&format=json&accept-language=de&zoom=18`,
+          { headers: { "User-Agent": "moments.dj/1.0" } },
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const a = data.address;
+          const place =
+            data.name || a?.amenity || a?.shop || a?.tourism || a?.leisure;
+          const area = a?.suburb || a?.city || a?.town || a?.village;
+          const name =
+            place && area
+              ? `${place}, ${area}`
+              : place ||
+                (a?.road && area
+                  ? `${a.road}, ${area}`
+                  : data.display_name?.split(",").slice(0, 3).join(",").trim());
+          setExifLocationName(name || null);
+        }
+      } catch {
+        /* ignore */
+      }
+      setExifLocationPrompt(gps);
+    }
   }
 
   function handleCropComplete(croppedFile: File) {
@@ -102,6 +141,11 @@ export default function CreateMomentPage() {
         formData.set("song_cover_url", song.coverUrl);
         if (song.spotifyUrl) formData.set("song_spotify_url", song.spotifyUrl);
       }
+      if (location) {
+        formData.set("location_name", location.name);
+        formData.set("location_lat", String(location.lat));
+        formData.set("location_lng", String(location.lng));
+      }
 
       const result = await createMoment(formData);
       if (result.error) {
@@ -160,6 +204,10 @@ export default function CreateMomentPage() {
         <div className="space-y-2">
           <Label>Song (optional)</Label>
           <SongSearch value={song} onChange={setSong} />
+        </div>
+        <div className="space-y-2">
+          <Label>Ort (optional)</Label>
+          <LocationSearch value={location} onChange={setLocation} />
         </div>
         <div className="space-y-2">
           <Label>Foto (optional)</Label>
@@ -261,6 +309,54 @@ export default function CreateMomentPage() {
                   setDate(exifPrompt.date);
                   setTime(exifPrompt.time);
                   setExifPrompt(null);
+                }}
+              >
+                Übernehmen
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {exifLocationPrompt && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50"
+          onClick={() => setExifLocationPrompt(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-background p-5 shadow-lg space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-medium">
+              Das Foto wurde{" "}
+              {exifLocationName ? (
+                <>
+                  bei <span className="font-semibold">{exifLocationName}</span>
+                </>
+              ) : (
+                "mit GPS-Daten"
+              )}{" "}
+              aufgenommen. Ort übernehmen?
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setExifLocationPrompt(null)}
+              >
+                Nein
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  setLocation({
+                    name:
+                      exifLocationName ||
+                      `${exifLocationPrompt.lat.toFixed(4)}, ${exifLocationPrompt.lng.toFixed(4)}`,
+                    lat: exifLocationPrompt.lat,
+                    lng: exifLocationPrompt.lng,
+                  });
+                  setExifLocationPrompt(null);
                 }}
               >
                 Übernehmen
