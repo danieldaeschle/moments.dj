@@ -51,6 +51,7 @@ export function Timeline({ moments, currentUserId }: Props) {
 
   // Realtime subscription + visibility fallback
   useRealtimeRefresh("moments");
+  useRealtimeRefresh("moment_likes");
 
   if (moments.length === 0) {
     return (
@@ -85,6 +86,7 @@ export function Timeline({ moments, currentUserId }: Props) {
           <TimelineItem
             key={moment.id}
             moment={moment}
+            currentUserId={currentUserId}
             onSelect={() => setSelectedMoment(moment)}
           />
         ))}
@@ -93,6 +95,7 @@ export function Timeline({ moments, currentUserId }: Props) {
       <FAB href="/create" />
       <MomentDetailDrawer
         moment={selectedMoment}
+        currentUserId={currentUserId}
         isOwn={selectedMoment?.author_id === currentUserId}
         onOpenChange={(open) => {
           if (!open) setSelectedMoment(null);

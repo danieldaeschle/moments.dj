@@ -12,11 +12,17 @@ import { useEffect, useState } from "react";
 
 type Props = {
   moment: MomentWithAuthor | null;
+  currentUserId: string;
   isOwn: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export function MomentDetailDrawer({ moment, isOwn, onOpenChange }: Props) {
+export function MomentDetailDrawer({
+  moment,
+  currentUserId,
+  isOwn,
+  onOpenChange,
+}: Props) {
   const [imgSrc, setImgSrc] = useState<string | null>(null);
 
   useEffect(() => {

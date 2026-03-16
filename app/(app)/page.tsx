@@ -17,7 +17,7 @@ export default async function TimelinePage() {
 
   const { data: moments } = await supabase
     .from("moments")
-    .select("*, profiles(*)")
+    .select("*, profiles!moments_author_id_fkey(*), moment_likes(*)")
     .order("moment_date", { ascending: false })
     .order("created_at", { ascending: false });
 

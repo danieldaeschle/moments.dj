@@ -20,7 +20,7 @@ export default async function EditMomentPage({ params }: Props) {
 
   const { data: moment } = await supabase
     .from("moments")
-    .select("*, profiles(*)")
+    .select("*, profiles!moments_author_id_fkey(*)")
     .eq("id", id)
     .single();
 

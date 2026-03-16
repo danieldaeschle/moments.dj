@@ -17,8 +17,15 @@ export type Moment = {
   created_at: string;
 };
 
+export type MomentLike = {
+  moment_id: string;
+  user_id: string;
+  created_at: string;
+};
+
 export type MomentWithAuthor = Moment & {
   profiles: Profile;
+  moment_likes: MomentLike[];
 };
 
 export type TriggerType = "bad_day" | "date" | "manual";

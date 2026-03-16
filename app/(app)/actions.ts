@@ -262,3 +262,45 @@ export async function testPushNotification(): Promise<{
     return { ok: false, diagnostics };
   }
 }
+
+export async function toggleLike(momentId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Nicht angemeldet" };
+  }
+
+  // Check if already liked
+  const { data: existing } = await supabase
+    .from("moment_likes")
+    .select("moment_id")
+    .eq("moment_id", momentId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("moment_likes")
+      .delete()
+      .eq("moment_id", momentId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      return { error: error.message };
+    }
+  } else {
+    const { error } = await supabase
+      .from("moment_likes")
+      .insert({ moment_id: momentId, user_id: user.id });
+
+    if (error) {
+      return { error: error.message };
+    }
+  }
+
+  revalidatePath("/");
+  return { success: true };
+}
