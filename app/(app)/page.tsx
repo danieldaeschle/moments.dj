@@ -19,6 +19,7 @@ export default async function TimelinePage() {
     .from("moments")
     .select("*, profiles!moments_author_id_fkey(*), moment_likes(*)")
     .order("moment_date", { ascending: false })
+    .order("moment_time", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: false });
 
   return (
