@@ -14,7 +14,21 @@ export type Moment = {
   image_path: string | null;
   moment_date: string;
   moment_time: string | null;
+  song_title: string | null;
+  song_artist: string | null;
+  song_deezer_id: string | null;
+  song_cover_url: string | null;
+  song_spotify_url: string | null;
   created_at: string;
+};
+
+export type Song = {
+  title: string;
+  artist: string;
+  deezerId: string;
+  coverUrl: string;
+  deezerUrl: string;
+  spotifyUrl: string | null;
 };
 
 export type MomentLike = {

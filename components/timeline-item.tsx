@@ -11,6 +11,7 @@ import { Heart, Loader2 } from "lucide-react";
 import { toggleLike } from "@/app/(app)/actions";
 import { useTransition } from "react";
 import { cn } from "@/lib/utils";
+import { SongPlayer } from "@/components/song-player";
 
 type Props = {
   moment: MomentWithAuthor;
@@ -74,12 +75,13 @@ function ItemCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <div
+      <motion.div
         className={cn(
-          "rounded-xl cursor-pointer transition-transform active:scale-[0.98]",
+          "rounded-xl cursor-pointer",
           isKeyMoment &&
             "p-0.5 bg-linear-to-br from-pink-500 via-purple-500 to-indigo-500",
         )}
+        whileTap={{ scale: 0.98 }}
         onClick={onSelect}
       >
         <Card
@@ -147,6 +149,15 @@ function ItemCard({
                 )}
               </button>
             </div>
+            {moment.song_title && (
+              <SongPlayer
+                title={moment.song_title}
+                artist={moment.song_artist ?? ""}
+                deezerId={moment.song_deezer_id}
+                coverUrl={moment.song_cover_url}
+                spotifyUrl={moment.song_spotify_url}
+              />
+            )}
             {isKeyMoment && (
               <p className="mt-2 text-[10px] font-medium tracking-wide uppercase text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-purple-500 to-indigo-500">
                 ✨ Schlüsselmoment
@@ -154,7 +165,7 @@ function ItemCard({
             )}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

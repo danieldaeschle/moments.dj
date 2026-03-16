@@ -12,9 +12,11 @@ import type { ExifDateTime } from "@/lib/image-utils";
 import { createMoment } from "@/app/(app)/actions";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/date-picker";
+import { SongSearch } from "@/components/song-search";
 import { ArrowLeft, CropIcon, ImagePlus, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { ImageCropper } from "@/components/image-cropper";
+import type { Song } from "@/lib/types";
 
 export default function CreateMomentPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function CreateMomentPage() {
   );
   const [time, setTime] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [song, setSong] = useState<Song | null>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [exifPrompt, setExifPrompt] = useState<ExifDateTime | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +95,13 @@ export default function CreateMomentPage() {
       if (imagePath) formData.set("image_path", imagePath);
       formData.set("moment_date", date);
       if (time) formData.set("moment_time", time);
+      if (song) {
+        formData.set("song_title", song.title);
+        formData.set("song_artist", song.artist);
+        formData.set("song_deezer_id", song.deezerId);
+        formData.set("song_cover_url", song.coverUrl);
+        if (song.spotifyUrl) formData.set("song_spotify_url", song.spotifyUrl);
+      }
 
       const result = await createMoment(formData);
       if (result.error) {
@@ -146,6 +156,10 @@ export default function CreateMomentPage() {
             rows={3}
             className="resize-none text-base"
           />
+        </div>
+        <div className="space-y-2">
+          <Label>Song (optional)</Label>
+          <SongSearch value={song} onChange={setSong} />
         </div>
         <div className="space-y-2">
           <Label>Foto (optional)</Label>

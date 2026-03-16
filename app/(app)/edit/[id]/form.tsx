@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { ImageCropper } from "@/components/image-cropper";
-import type { MomentWithAuthor } from "@/lib/types";
+import { SongSearch } from "@/components/song-search";
+import type { MomentWithAuthor, Song } from "@/lib/types";
 
 type Props = {
   moment: MomentWithAuthor;
@@ -39,6 +40,18 @@ export function EditMomentForm({ moment }: Props) {
   const [removeImage, setRemoveImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [song, setSong] = useState<Song | null>(
+    moment.song_title && moment.song_artist
+      ? {
+          title: moment.song_title,
+          artist: moment.song_artist,
+          deezerId: moment.song_deezer_id ?? "",
+          coverUrl: moment.song_cover_url ?? "",
+          deezerUrl: "",
+          spotifyUrl: moment.song_spotify_url ?? null,
+        }
+      : null,
+  );
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [exifPrompt, setExifPrompt] = useState<ExifDateTime | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,6 +121,15 @@ export function EditMomentForm({ moment }: Props) {
       if (removeImage) formData.set("remove_image", "true");
       formData.set("moment_date", date);
       formData.set("moment_time", time);
+      if (song) {
+        formData.set("song_title", song.title);
+        formData.set("song_artist", song.artist);
+        formData.set("song_deezer_id", song.deezerId);
+        formData.set("song_cover_url", song.coverUrl);
+        if (song.spotifyUrl) formData.set("song_spotify_url", song.spotifyUrl);
+      } else {
+        formData.set("remove_song", "true");
+      }
 
       const result = await updateMoment(moment.id, formData);
       if (result.error) {
@@ -174,6 +196,10 @@ export function EditMomentForm({ moment }: Props) {
             rows={3}
             className="resize-none text-base"
           />
+        </div>
+        <div className="space-y-2">
+          <Label>Song (optional)</Label>
+          <SongSearch value={song} onChange={setSong} />
         </div>
         <div className="space-y-2">
           <Label>Foto (optional)</Label>

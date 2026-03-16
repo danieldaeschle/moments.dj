@@ -23,6 +23,11 @@ export async function createMoment(formData: FormData) {
     (formData.get("moment_date") as string) ||
     new Date().toISOString().slice(0, 10);
   const momentTime = (formData.get("moment_time") as string) || null;
+  const songTitle = (formData.get("song_title") as string) || null;
+  const songArtist = (formData.get("song_artist") as string) || null;
+  const songDeezerId = (formData.get("song_deezer_id") as string) || null;
+  const songCoverUrl = (formData.get("song_cover_url") as string) || null;
+  const songSpotifyUrl = (formData.get("song_spotify_url") as string) || null;
 
   if (!title?.trim()) {
     return { error: "Titel ist erforderlich" };
@@ -35,6 +40,11 @@ export async function createMoment(formData: FormData) {
     image_path: imagePath,
     moment_date: momentDate,
     moment_time: momentTime || null,
+    song_title: songTitle,
+    song_artist: songArtist,
+    song_deezer_id: songDeezerId,
+    song_cover_url: songCoverUrl,
+    song_spotify_url: songSpotifyUrl,
   });
 
   if (error) {
@@ -111,6 +121,12 @@ export async function updateMoment(id: string, formData: FormData) {
   const removeImage = formData.get("remove_image") === "true";
   const momentDate = (formData.get("moment_date") as string) || undefined;
   const momentTime = formData.get("moment_time") as string | null;
+  const songTitle = (formData.get("song_title") as string) || null;
+  const songArtist = (formData.get("song_artist") as string) || null;
+  const songDeezerId = (formData.get("song_deezer_id") as string) || null;
+  const songCoverUrl = (formData.get("song_cover_url") as string) || null;
+  const songSpotifyUrl = (formData.get("song_spotify_url") as string) || null;
+  const removeSong = formData.get("remove_song") === "true";
 
   if (!title?.trim()) {
     return { error: "Titel ist erforderlich" };
@@ -142,6 +158,20 @@ export async function updateMoment(id: string, formData: FormData) {
   }
 
   updates.moment_time = momentTime || null;
+
+  if (removeSong) {
+    updates.song_title = null;
+    updates.song_artist = null;
+    updates.song_deezer_id = null;
+    updates.song_cover_url = null;
+    updates.song_spotify_url = null;
+  } else if (songTitle) {
+    updates.song_title = songTitle;
+    updates.song_artist = songArtist;
+    updates.song_deezer_id = songDeezerId;
+    updates.song_cover_url = songCoverUrl;
+    updates.song_spotify_url = songSpotifyUrl;
+  }
 
   const { error } = await supabase.from("moments").update(updates).eq("id", id);
 

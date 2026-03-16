@@ -137,3 +137,12 @@
     display: none;
   }
 }
+
+@keyframes shimmer {
+  0% {
+    left: -25%;
+  }
+  100% {
+    left: 100%;
+  }
+}

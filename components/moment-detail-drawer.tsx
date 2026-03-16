@@ -9,6 +9,7 @@ import { getImageUrl, getOriginalImageUrl } from "@/lib/image-utils";
 import { Pencil, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { SongPlayer } from "@/components/song-player";
 
 type Props = {
   moment: MomentWithAuthor | null;
@@ -89,6 +90,20 @@ export function MomentDetailDrawer({
           <p className="mt-3 max-w-md whitespace-pre-wrap text-center text-sm text-white/90">
             {moment.text}
           </p>
+        )}
+
+        {/* Song */}
+        {moment.song_title && (
+          <div className="mt-3 w-full max-w-md">
+            <SongPlayer
+              title={moment.song_title}
+              artist={moment.song_artist ?? ""}
+              deezerId={moment.song_deezer_id}
+              coverUrl={moment.song_cover_url}
+              spotifyUrl={moment.song_spotify_url}
+              variant="detail"
+            />
+          </div>
         )}
 
         {/* Date */}
