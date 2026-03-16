@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "db:push": "supabase link --project-ref $SUPABASE_PROJECT_ID && supabase db push",
+    "db:push": "node scripts/db-push.mjs",
     "start": "next start",
     "lint": "eslint"
   },
