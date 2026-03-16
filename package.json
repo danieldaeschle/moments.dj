@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "supabase link --project-ref $SUPABASE_PROJECT_ID && supabase db push && next build",
+    "build": "next build",
+    "db:push": "supabase link --project-ref $SUPABASE_PROJECT_ID && supabase db push",
     "start": "next start",
     "lint": "eslint"
   },
