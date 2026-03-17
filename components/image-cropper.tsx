@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -14,6 +14,8 @@ type Props = {
   onCropComplete: (croppedFile: File) => void;
 };
 
+const CROP_STAGE_GUTTER = 24;
+
 export function ImageCropper({
   imageSrc,
   open,
@@ -22,10 +24,43 @@ export function ImageCropper({
 }: Props) {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [imageSize, setImageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [stageSize, setStageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const updateStageSize = () => {
+      setStageSize({
+        width: stage.clientWidth,
+        height: stage.clientHeight,
+      });
+    };
+
+    updateStageSize();
+
+    const observer = new ResizeObserver(updateStageSize);
+    observer.observe(stage);
+
+    return () => observer.disconnect();
+  }, [open]);
 
   const onImageLoad = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
+      setImageSize({
+        width: e.currentTarget.naturalWidth,
+        height: e.currentTarget.naturalHeight,
+      });
+
       const initialCrop: Crop = {
         unit: "%",
         x: 0,
@@ -45,10 +80,13 @@ export function ImageCropper({
     onCropComplete(file);
   }
 
+  const displaySize =
+    imageSize && stageSize ? getContainSize(imageSize, stageSize) : null;
+
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex flex-col bg-black">
+    <div className="fixed inset-0 z-50 flex h-dvh flex-col bg-black">
       <div className="flex items-center justify-between px-4 py-3">
         <h2 className="text-base font-semibold text-white">Bild zuschneiden</h2>
         <button
@@ -59,22 +97,29 @@ export function ImageCropper({
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4">
-        <ReactCrop
-          crop={crop}
-          onChange={(c) => setCrop(c)}
-          onComplete={(c) => setCompletedCrop(c)}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            ref={imgRef}
-            src={imageSrc}
-            alt="Zuschneiden"
-            crossOrigin="anonymous"
-            onLoad={onImageLoad}
-            className="max-h-[calc(100vh-10rem)] max-w-full object-contain"
-          />
-        </ReactCrop>
+      <div
+        ref={stageRef}
+        className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 py-2"
+      >
+        <div className="flex h-full w-full items-center justify-center overflow-hidden [&_.ReactCrop__child-wrapper]:overflow-visible">
+          <ReactCrop
+            crop={crop}
+            onChange={(c) => setCrop(c)}
+            onComplete={(c) => setCompletedCrop(c)}
+            style={displaySize ?? undefined}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              ref={imgRef}
+              src={imageSrc}
+              alt="Zuschneiden"
+              crossOrigin="anonymous"
+              onLoad={onImageLoad}
+              className="block"
+              style={displaySize ?? undefined}
+            />
+          </ReactCrop>
+        </div>
       </div>
 
       <div className="flex items-center justify-center gap-3 px-4 py-4">
@@ -93,6 +138,22 @@ export function ImageCropper({
     </div>,
     document.body,
   );
+}
+
+function getContainSize(
+  imageSize: { width: number; height: number },
+  stageSize: { width: number; height: number },
+) {
+  const availableWidth = Math.max(stageSize.width - CROP_STAGE_GUTTER * 2, 1);
+  const availableHeight = Math.max(stageSize.height - CROP_STAGE_GUTTER * 2, 1);
+  const widthRatio = availableWidth / imageSize.width;
+  const heightRatio = availableHeight / imageSize.height;
+  const scale = Math.min(widthRatio, heightRatio, 1);
+
+  return {
+    width: Math.floor(imageSize.width * scale),
+    height: Math.floor(imageSize.height * scale),
+  };
 }
 
 async function getCroppedImage(
